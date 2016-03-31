@@ -10,14 +10,12 @@ Installation
 Install the latest version:
 
 ```
-#!bash
 pip install --upgrade s3pypi --extra-index-url https://pypi.novemberfive.co/
 ```
 
 Install the development version:
 
 ```
-#!bash
 git clone -b develop git@github.com:novemberfiveco/s3pypi.git
 cd s3pypi/ && sudo pip install -e .
 ```
@@ -29,7 +27,6 @@ Setting up S3 and CloudFront
 First, you must create an S3 bucket for your Python Package Repository, and enable static website hosting:
 
 ```
-#!bash
 aws s3 mb s3://mybucket
 aws s3 website s3://mybucket --index-document index.html
 ```
@@ -37,7 +34,6 @@ aws s3 website s3://mybucket --index-document index.html
 Next, in order to serve packages to ``pip`` over HTTPS, you must create a CloudFront distribution. Enter the S3 website endpoint as the origin domain name, and ``index.html`` as the default root object:
 
 ```
-#!bash
 aws cloudfront create-distribution \
     --origin-domain-name mybucket.s3-website-eu-west-1.amazonaws.com \
     --default-root-object index.html
@@ -56,7 +52,6 @@ Distributing packages
 You can now use ``s3pypi`` to create Python packages and upload them to your S3 bucket. To hide packages from the public, you can specify a secret subdirectory using the ``--secret`` option:
 
 ```
-#!bash
 cd /path/to/your/awesome-project/
 s3pypi --bucket mybucket [--secret SECRET]
 ```
@@ -68,14 +63,12 @@ Installing packages
 Install your packages using ``pip`` by pointing the ``--extra-index-url`` to your CloudFront distribution (optionally followed by a secret subdirectory):
 
 ```
-#!bash
 pip install --upgrade awesome-project --extra-index-url https://pypi.example.com/SECRET/
 ```
 
 Alternatively, you can configure the index URL in ``~/.pip/pip.conf``:
 
 ```
-#!bash
 [global]
 extra-index-url = https://pypi.example.com/SECRET/
 ```

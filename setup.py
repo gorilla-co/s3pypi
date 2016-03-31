@@ -13,6 +13,7 @@ setup(
     author='Ruben Van den Bossche, Matteo De Wint',
     author_email='ruben@novemberfive.co, matteo@novemberfive.co',
     url='https://github.com/novemberfiveco/s3pypi',
+    download_url='https://github.com/novemberfiveco/s3pypi/tarball/' + __version__,
 
     packages=find_packages(),
     package_data={__prog__: ['templates/*.j2']},
