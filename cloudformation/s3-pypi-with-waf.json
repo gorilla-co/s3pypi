@@ -1,0 +1,305 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "s3-pypi setup - Visit https://novemberfive.co.",
+  "Mappings": {
+    "RegionMap": {
+      "us-east-1": {
+        "WebsiteEndpoint": "s3-website-us-east-1.amazonaws.com"
+      },
+      "us-west-2": {
+        "WebsiteEndpoint": "s3-website-us-west-2.amazonaws.com"
+      },
+      "us-west-1": {
+        "WebsiteEndpoint": "s3-website-us-west-1.amazonaws.com"
+      },
+      "eu-west-1": {
+        "WebsiteEndpoint": "s3-website-eu-west-1.amazonaws.com"
+      },
+      "eu-central-1": {
+        "WebsiteEndpoint": "s3-website.eu-central-1.amazonaws.com"
+      },
+      "ap-southeast-1": {
+        "WebsiteEndpoint": "s3-website-ap-southeast-1.amazonaws.com"
+      },
+      "ap-northeast-1": {
+        "WebsiteEndpoint": "s3-website-ap-northeast-1.amazonaws.com"
+      },
+      "ap-southeast-2": {
+        "WebsiteEndpoint": "s3-website-ap-southeast-2.amazonaws.com"
+      },
+      "ap-northeast-2": {
+        "WebsiteEndpoint": "s3-website.ap-northeast-2.amazonaws.com"
+      },
+      "sa-east-1": {
+        "WebsiteEndpoint": "s3-website-sa-east-1.amazonaws.com"
+      }
+    }
+  },
+  "Outputs": {
+    "CNAMERecordValue": {
+      "Description": "The value of the CNAME or alias record of the configured (sub)domain.",
+      "Value": {
+        "Fn::GetAtt": [
+          "PyPiCloudfrontDistribution",
+          "DomainName"
+        ]
+      }
+    }
+  },
+  "Parameters": {
+    "DomainName": {
+      "Description": "The (sub)domain that you want to use for your PyPi repository (e.g. pypi.yourcompany.com)",
+      "Type": "String"
+    },
+    "ServerCertificateId": {
+      "Description": "ID of the server certificate for the domain name (e.g. ASCAXXXXXXXXXXXXXXXXX)",
+      "Type": "String"
+    },
+    "WhitelistedCIDRBlock": {
+      "Description": "Whitelisted IP or IP range (Format: IPv4, CIDR notation, e.g. 10.0.0.1/32)",
+      "Type": "String",
+      "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(/([0-9]|[1-2][0-9]|3[0-2]))$"
+    }
+  },
+  "Resources": {
+    "PyPiS3Bucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": {
+          "Ref": "DomainName"
+        },
+        "WebsiteConfiguration": {
+          "IndexDocument": "index.html"
+        }
+      }
+    },
+    "PyPiS3BucketBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "PyPiS3Bucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:s3:::",
+                    {
+                      "Ref": "PyPiS3Bucket"
+                    },
+                    "/*"
+                  ]
+                ]
+              },
+              "Principal": "*",
+              "Condition": {
+                "IpAddress": {
+                  "aws:SourceIp": [
+                    "52.84.0.0/15",
+                    "54.182.0.0/16",
+                    "54.192.0.0/16",
+                    "54.230.0.0/16",
+                    "54.239.128.0/18",
+                    "54.239.192.0/19",
+                    "54.240.128.0/18",
+                    "204.246.164.0/22",
+                    "204.246.168.0/22",
+                    "204.246.174.0/23",
+                    "204.246.176.0/20",
+                    "205.251.254.0/24",
+                    "205.251.252.0/23",
+                    "205.251.250.0/23",
+                    "205.251.249.0/24",
+                    "205.251.192.0/19",
+                    "216.137.32.0/19"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "PyPiCloudfrontDistribution": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "WebACLId": {
+            "Ref": "PyPiWebACL"
+          },
+          "Aliases": [
+            {
+              "Ref": "DomainName"
+            }
+          ],
+          "Comment": "Created by s3-pypi",
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "GET",
+              "HEAD"
+            ],
+            "ForwardedValues": {
+              "QueryString": "true"
+            },
+            "TargetOriginId": "PyPiS3BucketOrigin",
+            "ViewerProtocolPolicy": "https-only"
+          },
+          "Enabled": "true",
+          "Origins": [
+            {
+              "CustomOriginConfig": {
+                "HTTPPort": "80",
+                "HTTPSPort": "443",
+                "OriginProtocolPolicy": "http-only"
+              },
+              "DomainName": {
+                "Fn::Join": [
+                  ".",
+                  [
+                    {
+                      "Ref": "PyPiS3Bucket"
+                    },
+                    {
+                      "Fn::FindInMap": [
+                        "RegionMap",
+                        {
+                          "Ref": "AWS::Region"
+                        },
+                        "WebsiteEndpoint"
+                      ]
+                    }
+                  ]
+                ]
+              },
+              "Id": "PyPiS3BucketOrigin"
+            }
+          ],
+          "PriceClass": "PriceClass_100",
+          "ViewerCertificate": {
+            "IamCertificateId": {
+              "Ref": "ServerCertificateId"
+            },
+            "MinimumProtocolVersion": "TLSv1",
+            "SslSupportMethod": "sni-only"
+          }
+        }
+      }
+    },
+    "PyPiIPWhitelist": {
+      "Type": "AWS::WAF::IPSet",
+      "Properties": {
+        "Name": "PyPi Whitelisted IPs",
+        "IPSetDescriptors": [
+          {
+            "Type": "IPV4",
+            "Value": {
+              "Ref": "WhitelistedCIDRBlock"
+            }
+          }
+        ]
+      }
+    },
+    "PyPiWAFAllowedIPRule": {
+      "Type": "AWS::WAF::Rule",
+      "Properties": {
+        "MetricName": "PyPiWAFAllowedIPRule",
+        "Name": "PyPiWAFAllowedIPRule",
+        "Predicates": [
+          {
+            "DataId": {
+              "Ref": "PyPiIPWhitelist"
+            },
+            "Negated": false,
+            "Type": "IPMatch"
+          }
+        ]
+      }
+    },
+    "PyPiWebACL": {
+      "Type": "AWS::WAF::WebACL",
+      "Properties": {
+        "Name": "Created by s3-pypi",
+        "DefaultAction": {
+          "Type": "BLOCK"
+        },
+        "MetricName": "PyPiWebACL",
+        "Rules": [
+          {
+            "Action": {
+              "Type": "ALLOW"
+            },
+            "Priority": 1,
+            "RuleId": {
+              "Ref": "PyPiWAFAllowedIPRule"
+            }
+          }
+        ]
+      }
+    },
+    "PublishS3PyPiPackages": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Description": "Policy for updating packages in S3",
+        "Path": "/",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowUserToSeeBucketListInTheConsole",
+              "Action": [
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketLocation"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                "arn:aws:s3:::*"
+              ]
+            },
+            {
+              "Sid": "AllowPutActionInBucket",
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:s3:::",
+                      {
+                        "Ref": "PyPiS3Bucket"
+                      },
+                      "/"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:s3:::",
+                      {
+                        "Ref": "PyPiS3Bucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
