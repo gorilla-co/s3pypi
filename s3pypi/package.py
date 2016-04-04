@@ -5,8 +5,13 @@ from jinja2 import Environment, PackageLoader
 
 from s3pypi import __prog__
 
+__author__ = 'Matteo De Wint'
+__copyright__ = 'Copyright 2016, November Five'
+__license__ = 'MIT'
+
 
 class Package(object):
+    """Python package archive."""
 
     def __init__(self, name):
         self.name, self.version = name.split('-')
@@ -43,6 +48,7 @@ class Package(object):
 
 
 class Index(object):
+    """Index containing URLs to all versions of a package, to be rendered to HTML."""
 
     template = Environment(loader=PackageLoader(__prog__, 'templates')).get_template('index.html.j2')
 

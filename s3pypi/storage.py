@@ -6,8 +6,13 @@ from boto.s3.key import Key
 
 from s3pypi.package import Index
 
+__author__ = 'Matteo De Wint'
+__copyright__ = 'Copyright 2016, November Five'
+__license__ = 'MIT'
+
 
 class S3Storage(object):
+    """Abstraction for storing package archives and index files in an S3 bucket."""
 
     def __init__(self, bucket, secret=None):
         self.bucket = boto.connect_s3().get_bucket(bucket)

@@ -10,7 +10,7 @@ Installation
 Install the latest version:
 
 ```
-pip install --upgrade s3pypi --extra-index-url https://pypi.novemberfive.co/
+pip install --upgrade s3pypi
 ```
 
 Install the development version:
@@ -24,27 +24,14 @@ cd s3pypi/ && sudo pip install -e .
 Setting up S3 and CloudFront
 ----------------------------
 
-First, you must create an S3 bucket for your Python Package Repository, and enable static website hosting:
+Before you can start using ``s3pypi``, you must set up an S3 bucket for your Python Package Repository, with static website hosting enabled. Additionally, you need a CloudFront distribution for serving the packages in your S3 bucket to ``pip`` over HTTPS. Both of these resources can be created using the CloudFormation templates provided in the ``cloudformation/`` directory:
 
 ```
-aws s3 mb s3://mybucket
-aws s3 website s3://mybucket --index-document index.html
+aws cloudformation create-stack --stack-name STACK_NAME \
+    --template-body file://cloudformation/s3-pypi.json \
+    --parameters ParameterKey=ServerCertificateId,ParameterValue=SERVER_CERT_ID \
+                 ParameterKey=DomainName,ParameterValue=DOMAIN_NAME
 ```
-
-Next, in order to serve packages to ``pip`` over HTTPS, you must create a CloudFront distribution. Enter the S3 website endpoint as the origin domain name, and ``index.html`` as the default root object:
-
-```
-aws cloudfront create-distribution \
-    --origin-domain-name mybucket.s3-website-eu-west-1.amazonaws.com \
-    --default-root-object index.html
-```
-
-Some additional CloudFront settings must be configured in the [AWS console](https://console.aws.amazon.com/cloudfront/home):
-
-- In the **General** tab, click *Edit*. Enter your desired *Alternate Domain Names* (e.g. ``pypi.example.com``) and configure a *Custom SSL Certificate* for your domain.
-- In the **Origins** tab, select the S3 origin and click *Edit*. Set the *Origin Protocol Policy* to **HTTP Only**.
-- In the **Behaviors** tab, select the default behavior and click *Edit*. Set the *Viewer Protocol Policy* to **HTTPS Only**.
-
 
 Distributing packages
 ---------------------

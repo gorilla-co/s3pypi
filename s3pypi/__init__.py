@@ -1,2 +1,2 @@
 __prog__ = 's3pypi'
-__version__ = u'0.0.6'
+__version__ = u'0.0.7'

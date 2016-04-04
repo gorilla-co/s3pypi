@@ -7,8 +7,7 @@ setup(
     name=__prog__,
     version=__version__,
 
-    description='S3PyPi',
-    long_description='CLI tool for creating a Python Package Repository in an S3 bucket',
+    description='CLI tool for creating a Python Package Repository in an S3 bucket',
 
     author='Ruben Van den Bossche, Matteo De Wint',
     author_email='ruben@novemberfive.co, matteo@novemberfive.co',

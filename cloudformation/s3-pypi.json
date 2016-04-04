@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "s3-pypi setup - Visit https://novemberfive.co.",
+  "Description": "s3pypi setup - Visit https://novemberfive.co.",
   "Mappings": {
     "RegionMap": {
       "us-east-1": {
@@ -131,7 +131,7 @@
               "Ref": "DomainName"
             }
           ],
-          "Comment": "Created by s3-pypi",
+          "Comment": "Created by s3pypi",
           "DefaultCacheBehavior": {
             "AllowedMethods": [
               "GET",
