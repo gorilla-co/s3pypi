@@ -5,8 +5,10 @@
     <title>Package Index</title>
 </head>
 <body>
-{% for package in packages %}
-    <a href="{{ url }}/{{ package.name }}/{{ package.filename }}">{{ package }}</a><br>
+{% for package in packages | sort %}
+    {% for filename in package.files | sort %}
+    <a href="{{ url }}/{{ package.name }}/{{ filename }}">{{ filename }}</a><br>
+    {% endfor %}
 {% endfor %}
 </body>
 </html>

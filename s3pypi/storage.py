@@ -22,8 +22,8 @@ class S3Storage(object):
         if secret:
             self.url += '/' + secret
 
-    def _key(self, package, filename=None):
-        path = '%s/%s' % (package.name, filename or package.filename)
+    def _key(self, package, filename):
+        path = '%s/%s' % (package.name, filename)
         return Key(self.bucket, '%s/%s' % (self.secret, path) if self.secret else path)
 
     def get_index(self, package):
@@ -41,7 +41,8 @@ class S3Storage(object):
         k.set_acl('public-read')
 
     def put_package(self, package):
-        k = self._key(package)
-        k.set_metadata('Content-Type', 'application/x-gzip')
-        k.set_contents_from_filename(os.path.join('dist', package.filename))
-        k.set_acl('public-read')
+        for filename in package.files:
+            k = self._key(package, filename)
+            k.set_metadata('Content-Type', 'application/x-gzip')
+            k.set_contents_from_filename(os.path.join('dist', filename))
+            k.set_acl('public-read')
