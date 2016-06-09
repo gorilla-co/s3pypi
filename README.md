@@ -3,6 +3,8 @@ S3PyPI
 
 S3PyPI is a CLI tool for creating a Python Package Repository in an S3 bucket.
 
+An extended tutorial on using this tool can be found [here](https://novemberfive.co/blog/opensource-pypi-package-repository-tutorial/).
+
 
 Installation
 ------------
