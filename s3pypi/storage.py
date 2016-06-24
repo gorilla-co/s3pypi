@@ -3,6 +3,7 @@ import os
 import boto
 from boto.exception import S3ResponseError
 from boto.s3.key import Key
+from boto.s3.connection import Location
 
 from s3pypi.package import Index
 
@@ -14,8 +15,12 @@ __license__ = 'MIT'
 class S3Storage(object):
     """Abstraction for storing package archives and index files in an S3 bucket."""
 
-    def __init__(self, bucket, secret=None):
-        self.bucket = boto.connect_s3().get_bucket(bucket)
+    def __init__(self, bucket, secret=None, region=None):
+        if region == None:
+            self.bucket = boto.connect_s3().get_bucket(bucket)
+        else:
+            self.bucket = boto.s3.connect_to_region(getattr(Location, region)).get_bucket(bucket)
+
         self.secret = secret
 
         self.url = 'http://' + self.bucket.get_website_endpoint()
