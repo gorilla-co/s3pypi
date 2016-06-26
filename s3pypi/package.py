@@ -17,7 +17,6 @@ class Package(object):
     """Python package archive."""
 
     def __init__(self, name, files):
-        print name
         self.name, self.version = name.rsplit('-', 1)
         self.files = set(files)
 
