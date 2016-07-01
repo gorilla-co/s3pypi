@@ -7,7 +7,7 @@
 <body>
 {% for package in packages | sort %}
     {% for filename in package.files | sort %}
-    <a href="{{ url }}/{{ package.name }}/{{ filename }}">{{ filename }}</a><br>
+    <a href="{{ filename }}">{{ filename }}</a><br>
     {% endfor %}
 {% endfor %}
 </body>
