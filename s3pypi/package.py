@@ -14,7 +14,7 @@ __license__ = 'MIT'
 
 
 class Package(object):
-    """Python package archive."""
+    """Python package."""
 
     def __init__(self, name, files):
         self.name, self.version = name.rsplit('-', 1)
@@ -63,22 +63,21 @@ class Package(object):
 
 
 class Index(object):
-    """Index containing URLs to all versions of a package, to be rendered to HTML."""
+    """Index of package versions, to be rendered to HTML."""
 
     template = Environment(loader=PackageLoader(__prog__, 'templates')).get_template('index.html.j2')
 
-    def __init__(self, url, packages):
+    def __init__(self, packages):
         self.packages = set(packages)
-        self.url = url
 
     @staticmethod
-    def parse(url, html):
+    def parse(html):
         filenames = defaultdict(set)
 
         for match in re.findall('<a href=".+/((.+?-\d+\.\d+\.\d+).+)">', html):
             filenames[match[1]].add(match[0])
 
-        return Index(url, (Package(name, files) for name, files in filenames.iteritems()))
+        return Index(Package(name, files) for name, files in filenames.iteritems())
 
     def to_html(self):
-        return self.template.render({'url': self.url, 'packages': self.packages})
+        return self.template.render({'packages': self.packages})
