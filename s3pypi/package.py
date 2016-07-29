@@ -47,7 +47,7 @@ class Package(object):
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
-        match = re.search('^making hard links in (.+)\.\.\.$', stdout, flags=re.MULTILINE)
+        match = re.search('^creating (.+)$', stdout, flags=re.MULTILINE)
 
         if not match:
             raise RuntimeError(stdout)
