@@ -36,6 +36,15 @@ class Package(object):
         return hash(self._attrs())
 
     @staticmethod
+    def _find_package_name(text):
+        match = re.search('^(copying files to|making hard links in) (.+)\.\.\.$', text, flags=re.MULTILINE)
+
+        if not match:
+            raise RuntimeError('Package name not found in:\n' + text)
+
+        return match.group(2)
+
+    @staticmethod
     def create(wheel=True):
         cmd = ['python', 'setup.py', 'sdist', '--formats', 'gztar']
 
@@ -47,16 +56,7 @@ class Package(object):
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
-        match = re.search('^copying files to (.+)\.\.\.$', stdout, flags=re.MULTILINE)
-
-        if not match:
-            # support mac os
-            match = re.search('^making hard links in (.+)\.\.\.$', stdout, flags=re.MULTILINE)
-
-        if not match:
-            raise RuntimeError(stdout)
-
-        name = match.group(1)
+        name = Package._find_package_name(stdout)
         files = [name + '.tar.gz']
 
         if wheel:

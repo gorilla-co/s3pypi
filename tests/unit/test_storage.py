@@ -1,6 +1,8 @@
+from s3pypi.package import Package
 from s3pypi.storage import S3Storage
 
 
-def test_secret():
-    storage = S3Storage('appstrakt-pypi', 'secret')
-    assert 'secret' in storage.url
+def test_secret_in_s3_key(secret):
+    storage = S3Storage('appstrakt-pypi', secret)
+    package = Package('test-0.1.0', [])
+    assert secret in storage._object(package, 'index.html').key
