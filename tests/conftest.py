@@ -12,5 +12,5 @@ def secret():
 
 @pytest.fixture(scope='function', params=['helloworld-0.1', 's3pypi-0.1.3'])
 def sdist_output(request):
-    with open(os.path.join('tests', 'data', 'sdist', request.param)) as f:
+    with open(os.path.join('tests', 'data', 'sdist_output', request.param)) as f:
         yield f.read(), request.param
