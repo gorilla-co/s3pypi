@@ -50,6 +50,10 @@ class Package(object):
         match = re.search('^copying files to (.+)\.\.\.$', stdout, flags=re.MULTILINE)
 
         if not match:
+            # support mac os
+            match = re.search('^making hard links in (.+)\.\.\.$', stdout, flags=re.MULTILINE)
+
+        if not match:
             raise RuntimeError(stdout)
 
         name = match.group(1)
