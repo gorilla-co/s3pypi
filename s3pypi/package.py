@@ -37,7 +37,7 @@ class Package(object):
 
     @staticmethod
     def _find_package_name(text):
-        match = re.search('^(copying files to|making hard links in) (.+)\.\.\.$', text, flags=re.MULTILINE)
+        match = re.search('^(copying files to|making hard links in) (.+)\.\.\.', text, flags=re.MULTILINE)
 
         if not match:
             raise RuntimeError('Package name not found in:\n' + text)
