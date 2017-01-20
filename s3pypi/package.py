@@ -7,6 +7,7 @@ from subprocess import check_output, CalledProcessError
 from jinja2 import Environment, PackageLoader
 
 from s3pypi import __prog__
+from s3pypi.exceptions import S3PyPiError
 
 __author__ = 'Matteo De Wint'
 __copyright__ = 'Copyright 2016, November Five'
@@ -78,10 +79,18 @@ class Index(object):
     def parse(html):
         filenames = defaultdict(set)
 
-        for match in re.findall('<a href=".+/((.+?-\d+\.\d+\.\d+).+)">', html):
+        for match in re.findall('<a href="((.+?-\d+\.\d+\.\d+).+)">', html):
             filenames[match[1]].add(match[0])
 
         return Index(Package(name, files) for name, files in filenames.iteritems())
 
     def to_html(self):
         return self.template.render({'packages': self.packages})
+
+    def add_package(self, package, force=False):
+        if force:
+            self.packages.discard(package)
+        elif any(p.version == package.version for p in self.packages):
+            raise S3PyPiError('%s already exists! You should use a different version.' % package)
+
+        self.packages.add(package)
