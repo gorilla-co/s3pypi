@@ -39,7 +39,7 @@ class S3Storage(object):
 
     def put_package(self, package):
         for filename in package.files:
-            with open(os.path.join('dist', filename)) as f:
+            with open(os.path.join('dist', filename), mode='rb') as f:
                 self._object(package, filename).put(
                     Body=f,
                     ContentType='application/x-gzip',
