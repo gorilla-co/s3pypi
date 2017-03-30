@@ -44,3 +44,8 @@ def test_add_package_force():
     index = Index([pkg1])
     index.add_package(pkg2, force=True)
     assert index.packages == {pkg2}
+
+
+def test_directory_normalize_package_name():
+    pkg = Package('company.test-0.0.1', ['foo'])
+    assert pkg.directory == 'company-test'
