@@ -19,7 +19,7 @@ class S3Storage(object):
         self.secret = secret
 
     def _object(self, package, filename):
-        path = '%s/%s' % (package.name, filename)
+        path = '%s/%s' % (package.directory, filename)
         return self.s3.Object(self.bucket, '%s/%s' % (self.secret, path) if self.secret else path)
 
     def get_index(self, package):

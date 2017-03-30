@@ -36,6 +36,10 @@ class Package(object):
     def __hash__(self):
         return hash(self._attrs())
 
+    @property
+    def directory(self):
+        return re.sub('[-_.]+', '-', self.name)
+
     @staticmethod
     def _find_package_name(text):
         match = re.search('^(copying files to|making hard links in) (.+)\.\.\.', text, flags=re.MULTILINE)
