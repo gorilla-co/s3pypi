@@ -57,7 +57,7 @@ class Package(object):
             cmd.append('bdist_wheel')
 
         try:
-            stdout = check_output(cmd).strip()
+            stdout = check_output(cmd).decode().strip()
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
@@ -86,7 +86,7 @@ class Index(object):
         for match in re.findall('<a href="((.+?-\d+\.\d+\.\d+).+)">', html):
             filenames[match[1]].add(match[0])
 
-        return Index(Package(name, files) for name, files in filenames.iteritems())
+        return Index(Package(name, files) for name, files in filenames.items())
 
     def to_html(self):
         return self.template.render({'packages': self.packages})
