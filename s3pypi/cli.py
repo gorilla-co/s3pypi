@@ -3,7 +3,7 @@ from __future__ import print_function
 import argparse
 import sys
 
-from s3pypi import __prog__, __version__
+from s3pypi import __prog__
 from s3pypi.exceptions import S3PyPiError
 from s3pypi.package import Package
 from s3pypi.storage import S3Storage
@@ -25,7 +25,7 @@ def create_and_upload_package(args):
 
 
 def main():
-    p = argparse.ArgumentParser(prog=__prog__, version=__version__)
+    p = argparse.ArgumentParser(prog=__prog__)
     p.add_argument('--bucket', required=True, help='S3 bucket')
     p.add_argument('--secret', help='S3 secret')
     p.add_argument('--region', help='S3 region')
