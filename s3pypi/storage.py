@@ -24,7 +24,7 @@ class S3Storage(object):
 
     def get_index(self, package):
         try:
-            html = self._object(package, 'index.html').get()['Body'].read()
+            html = self._object(package, 'index.html').get()['Body'].read().decode('utf-8')
             return Index.parse(html)
         except ClientError:
             return Index([])

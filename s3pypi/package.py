@@ -57,7 +57,7 @@ class Package(object):
             cmd.append('bdist_wheel')
 
         try:
-            stdout = check_output(cmd).strip()
+            stdout = check_output(cmd).decode().strip()
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
