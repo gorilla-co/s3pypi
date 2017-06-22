@@ -15,7 +15,7 @@ __license__ = 'MIT'
 
 def create_and_upload_package(args):
     package = Package.create(args.wheel)
-    storage = S3Storage(args.bucket, args.secret, args.region)
+    storage = S3Storage(args.bucket, args.secret, args.region, args.bare)
 
     index = storage.get_index(package)
     index.add_package(package, args.force)
@@ -31,6 +31,7 @@ def parse_args(raw_args):
     p.add_argument('--region', help='S3 region')
     p.add_argument('--force', action='store_true', help='Overwrite existing packages')
     p.add_argument('--no-wheel', dest='wheel', action='store_false', help='Skip wheel distribution')
+    p.add_argument('--bare', action='store_true', help='Store index as bare package name')
     return p.parse_args(raw_args)
 
 
