@@ -13,11 +13,12 @@ __license__ = 'MIT'
 class S3Storage(object):
     """Abstraction for storing package archives and index files in an S3 bucket."""
 
-    def __init__(self, bucket, secret=None, region=None, bare=False):
+    def __init__(self, bucket, secret=None, region=None, bare=False, private=False):
         self.s3 = boto3.resource('s3', region_name=region)
         self.bucket = bucket
         self.secret = secret
         self.index = '' if bare else 'index.html'
+        self.acl = 'private' if private else 'public-read'
 
     def _object(self, package, filename):
         path = '%s/%s' % (package.directory, filename)
@@ -35,7 +36,7 @@ class S3Storage(object):
             Body=index.to_html(),
             ContentType='text/html',
             CacheControl='public, must-revalidate, proxy-revalidate, max-age=0',
-            ACL='public-read'
+            ACL=self.acl
         )
 
     def put_package(self, package):
@@ -44,5 +45,5 @@ class S3Storage(object):
                 self._object(package, filename).put(
                     Body=f,
                     ContentType='application/x-gzip',
-                    ACL='public-read'
+                    ACL=self.acl
                 )
