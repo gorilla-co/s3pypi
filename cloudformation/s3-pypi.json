@@ -52,7 +52,7 @@
       "Type": "String"
     },
     "ServerCertificateId": {
-      "Description": "ID of the server certificate for the domain name (e.g. ASCAXXXXXXXXXXXXXXXXX)",
+      "Description": "ARN of the SSL server certificate for the domain name, must be registered in us-east-1",
       "Type": "String"
     }
   },
@@ -175,7 +175,7 @@
           ],
           "PriceClass": "PriceClass_100",
           "ViewerCertificate": {
-            "IamCertificateId": {
+            "AcmCertificateArn": {
               "Ref": "ServerCertificateId"
             },
             "MinimumProtocolVersion": "TLSv1",
