@@ -31,7 +31,7 @@ Before you can start using ``s3pypi``, you must set up an S3 bucket for your Pyt
 ```bash
 aws cloudformation create-stack --stack-name STACK_NAME \
     --template-body file://cloudformation/s3-pypi.json \
-    --parameters ParameterKey=ServerCertificateId,ParameterValue=SERVER_CERT_ID \
+    --parameters ParameterKey=AcmCertificateArn,ParameterValue=ACM_CERT_ARN \
                  ParameterKey=DomainName,ParameterValue=DOMAIN_NAME
 ```
 

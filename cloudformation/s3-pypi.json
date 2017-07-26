@@ -51,8 +51,8 @@
       "Description": "The (sub)domain that you want to use for your PyPi repository (e.g. pypi.yourcompany.com)",
       "Type": "String"
     },
-    "ServerCertificateId": {
-      "Description": "ARN of the SSL server certificate for the domain name, must be registered in us-east-1",
+    "AcmCertificateArn": {
+      "Description": "ARN of the ACM certificate for the domain name, must be registered in us-east-1",
       "Type": "String"
     }
   },
@@ -176,7 +176,7 @@
           "PriceClass": "PriceClass_100",
           "ViewerCertificate": {
             "AcmCertificateArn": {
-              "Ref": "ServerCertificateId"
+              "Ref": "AcmCertificateArn"
             },
             "MinimumProtocolVersion": "TLSv1",
             "SslSupportMethod": "sni-only"
