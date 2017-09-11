@@ -19,9 +19,13 @@ def create_and_upload_package(args):
 
     index = storage.get_index(package)
     index.add_package(package, args.force)
+    
+    master_index = storage.get_master_index()
+    master_index.add_package_if_absent(package)
 
     storage.put_package(package)
     storage.put_index(package, index)
+    storage.put_master_index(master_index)
 
 
 def parse_args(raw_args):

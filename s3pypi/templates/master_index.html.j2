@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Package Index</title>
+</head>
+<body>
+{%- for package_dir in packages | sort %}
+    <a href="{{ package_dir }}">{{ package_dir }}</a><br>
+{%- endfor %}
+</body>
+</html>

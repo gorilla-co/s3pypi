@@ -9,8 +9,8 @@ setup(
 
     description='CLI tool for creating a Python Package Repository in an S3 bucket',
 
-    author='Ruben Van den Bossche, Matteo De Wint',
-    author_email='ruben@novemberfive.co, matteo@novemberfive.co',
+    author='Ruben Van den Bossche, Matteo De Wint, Peter A. Donis',
+    author_email='ruben@novemberfive.co, matteo@novemberfive.co, peterdonis@alum.mit.edu',
     url='https://github.com/novemberfiveco/s3pypi',
     download_url='https://github.com/novemberfiveco/s3pypi/tarball/' + __version__,
 

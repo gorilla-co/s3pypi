@@ -98,3 +98,27 @@ class Index(object):
             raise S3PyPiError('%s already exists! You should use a different version.' % package)
 
         self.packages.add(package)
+
+
+class MasterIndex(object):
+    """Master index of all available packages, to be rendered to HTML."""
+
+    template = Environment(loader=PackageLoader(__prog__, 'templates')).get_template('master_index.html.j2')
+    
+    def __init__(self, package_dirs):
+        self.packages = set(package_dirs)
+
+    @staticmethod
+    def parse(html):
+        package_dirs = set()
+
+        for match in re.findall('<a href="(.+)">', html):
+            package_dirs.add(match[0])
+
+        return MasterIndex(package_dirs)
+
+    def to_html(self):
+        return self.template.render({'packages': self.packages})
+
+    def add_package_if_absent(self, package):
+        self.packages.add(package.directory)

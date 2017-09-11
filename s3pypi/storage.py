@@ -3,7 +3,7 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 
-from s3pypi.package import Index
+from s3pypi.package import Index, MasterIndex
 
 __author__ = 'Matteo De Wint'
 __copyright__ = 'Copyright 2016, November Five'
@@ -19,6 +19,24 @@ class S3Storage(object):
         self.secret = secret
         self.index = '' if bare else 'index.html'
         self.acl = 'private' if private else 'public-read'
+
+    def _master_object(self):
+        return self.s3.Object(self.bucket, "index.html")
+
+    def get_master_index(self):
+        try:
+            html = self._master_object().get()['Body'].read().decode('utf-8')
+            return MasterIndex.parse(html)
+        except ClientError:
+            return MasterIndex([])
+
+    def put_master_index(self, index):
+        self._master_object().put(
+            Body=index.to_html(),
+            ContentType='text/html',
+            CacheControl='public, must-revalidate, proxy-revalidate, max-age=0',
+            ACL=self.acl
+        )
 
     def _object(self, package, filename):
         path = '%s/%s' % (package.directory, filename)
