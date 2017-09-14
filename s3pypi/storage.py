@@ -20,15 +20,18 @@ class S3Storage(object):
         self.index = '' if bare else 'index.html'
         self.acl = 'private' if private else 'public-read'
 
-    def _master_object(self):
-        return self.s3.Object(self.bucket, "index.html")
+    def _client(self):
+        return boto3.client('s3')
 
     def get_master_index(self):
         try:
-            html = self._master_object().get()['Body'].read().decode('utf-8')
-            return MasterIndex.parse(html)
+            objs = self._client().list_objects(Bucket=self.bucket)
+            return MasterIndex(o['Key'].split('/')[0] for o in objs['Contents'] if '/' in o['Key'])
         except ClientError:
             return MasterIndex([])
+
+    def _master_object(self):
+        return self.s3.Object(self.bucket, "index.html")
 
     def put_master_index(self, index):
         self._master_object().put(

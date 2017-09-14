@@ -108,15 +108,6 @@ class MasterIndex(object):
     def __init__(self, package_dirs):
         self.packages = set(package_dirs)
 
-    @staticmethod
-    def parse(html):
-        package_dirs = set()
-
-        for match in re.findall('<a href="(.+)">', html):
-            package_dirs.add(match[0])
-
-        return MasterIndex(package_dirs)
-
     def to_html(self):
         return self.template.render({'packages': self.packages})
 
