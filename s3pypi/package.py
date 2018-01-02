@@ -50,6 +50,15 @@ class Package(object):
         return match.group(2)
 
     @staticmethod
+    def _find_wheel_name(text):
+        match = re.search('creating \'.*(dist.*\.whl)\' and adding', text, flags=re.MULTILINE)
+
+        if not match:
+            raise RuntimeError('Wheel name not found in:\n' + text)
+
+        return match.group(1)
+
+    @staticmethod
     def create(wheel=True):
         cmd = ['python', 'setup.py', 'sdist', '--formats', 'gztar']
 
@@ -65,8 +74,7 @@ class Package(object):
         files = [name + '.tar.gz']
 
         if wheel:
-            files.extend(os.path.basename(path) for path in
-                         glob.glob(os.path.join('dist', name + '-*.whl')))
+            files += [os.path.basename(Package._find_wheel_name(stdout))]
 
         return Package(name, files)
 
