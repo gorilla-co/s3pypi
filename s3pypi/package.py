@@ -59,7 +59,7 @@ class Package(object):
         return match.group(1)
 
     @staticmethod
-    def create(wheel=True):
+    def create(wheel=True, sdist=True):
         cmd = ['python', 'setup.py', 'sdist', '--formats', 'gztar']
 
         if wheel:
@@ -70,8 +70,10 @@ class Package(object):
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
+        files = []
         name = Package._find_package_name(stdout)
-        files = [name + '.tar.gz']
+        if sdist:
+            files.append([name + '.tar.gz'])
 
         if wheel:
             files += [os.path.basename(Package._find_wheel_name(stdout))]
