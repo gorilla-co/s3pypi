@@ -13,7 +13,9 @@ __license__ = 'MIT'
 class S3Storage(object):
     """Abstraction for storing package archives and index files in an S3 bucket."""
 
-    def __init__(self, bucket, secret=None, region=None, bare=False, private=False):
+    def __init__(self, bucket, secret=None, region=None, bare=False, private=False, profile=None):
+        if profile:
+            boto3.setup_default_session(profile_name=profile)        
         self.s3 = boto3.resource('s3', region_name=region)
         self.bucket = bucket
         self.secret = secret
