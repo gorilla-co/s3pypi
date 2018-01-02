@@ -28,12 +28,12 @@ def parse_args(raw_args):
     p = argparse.ArgumentParser(prog=__prog__)
     p.add_argument('--bucket', required=True, help='S3 bucket')
     p.add_argument('--secret', help='S3 secret')
-    p.add_argument('--region', help='S3 region')
+    p.add_argument('--region', help='AWS region')
+    p.add_argument('--profile', help='AWS profile')
     p.add_argument('--force', action='store_true', help='Overwrite existing packages')
     p.add_argument('--no-wheel', dest='wheel', action='store_false', help='Skip wheel distribution')
     p.add_argument('--bare', action='store_true', help='Store index as bare package name')
     p.add_argument('--private', action='store_true', help='Store S3 Keys as private objects')
-    p.add_argument('--profile', help='AWS profile to use in connection with S3')
     return p.parse_args(raw_args)
 
 

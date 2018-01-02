@@ -64,8 +64,8 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 
-#MyPY
+# MyPY
 .mypy_cache/
 
-#VSCode
+# VSCode
 .vscode/
