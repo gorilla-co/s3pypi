@@ -70,13 +70,14 @@ class Package(object):
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
-        files = []
         name = Package._find_package_name(stdout)
+        files = []
+
         if sdist:
-            files.append([name + '.tar.gz'])
+            files.append(name + '.tar.gz')
 
         if wheel:
-            files += [os.path.basename(Package._find_wheel_name(stdout))]
+            files.append(os.path.basename(Package._find_wheel_name(stdout)))
 
         return Package(name, files)
 
