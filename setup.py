@@ -18,5 +18,5 @@ setup(
     package_data={__prog__: ['templates/*.j2']},
 
     install_requires=['boto3', 'Jinja2', 'wheel'],
-    entry_points={'console_scripts': ['{0}={0}.cli:main'.format(__prog__)]},
+    entry_points={'console_scripts': ['{0}={0}.__main__:main'.format(__prog__)]},
 )
