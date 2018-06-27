@@ -3,7 +3,7 @@ from __future__ import print_function
 import argparse
 import sys
 
-from s3pypi import __prog__
+from s3pypi import __prog__, __version__
 from s3pypi.exceptions import S3PyPiError
 from s3pypi.package import Package
 from s3pypi.storage import S3Storage
@@ -14,8 +14,8 @@ __license__ = 'MIT'
 
 
 def create_and_upload_package(args):
-    package = Package.create(args.wheel, args.sdist)
-    storage = S3Storage(args.bucket, args.secret, args.region, args.bare, args.private, args.profile)
+    package = Package.create(args.wheel, args.sdist, args.verbose)
+    storage = S3Storage(args.bucket, args.secret, args.region, args.bare, args.private, args.profile, args.verbose)
 
     index = storage.get_index(package)
     index.add_package(package, args.force)
@@ -35,11 +35,17 @@ def parse_args(raw_args):
     p.add_argument('--no-sdist', dest='sdist', action='store_false', help='Skip sdist distribution')
     p.add_argument('--bare', action='store_true', help='Store index as bare package name')
     p.add_argument('--private', action='store_true', help='Store S3 Keys as private objects')
+    p.add_argument('--verbose', action='store_true', help='Turn on verbose output.')
+    p.add_argument('--version', action='store_true', help='Show s3pypi version.')
     return p.parse_args(raw_args)
 
 
 def main():
     args = parse_args(sys.argv[1:])
+
+    if args.version:
+        print("s3pypi v{}".format(__version__))
+        sys.exit(0)
 
     try:
         create_and_upload_package(args)

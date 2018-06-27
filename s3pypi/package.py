@@ -1,6 +1,7 @@
 import glob
 import os
 import re
+import sys
 from collections import defaultdict
 from subprocess import check_output, CalledProcessError
 
@@ -45,31 +46,37 @@ class Package(object):
         match = re.search('^(copying files to|making hard links in) (.+)\.\.\.', text, flags=re.MULTILINE)
 
         if not match:
-            raise RuntimeError('Package name not found in:\n' + text)
+            raise RuntimeError('Package name not found! (use --verbose to view output)')
 
         return match.group(2)
 
     @staticmethod
     def _find_wheel_name(text):
-        match = re.search('creating \'.*(dist.*\.whl)\' and adding', text, flags=re.MULTILINE)
+        match = re.search("creating '.*(dist.*\.whl)' and adding", text, flags=re.MULTILINE)
 
         if not match:
-            raise RuntimeError('Wheel name not found in:\n' + text)
+            raise RuntimeError('Wheel name not found! (use --verbose to view output)')
 
         return match.group(1)
 
     @staticmethod
-    def create(wheel=True, sdist=True):
-        cmd = ['python', 'setup.py', 'sdist', '--formats', 'gztar']
+    def create(wheel=True, sdist=True, verbose=False):
+        cmd = [sys.executable, 'setup.py', 'sdist', '--formats', 'gztar']
 
         if wheel:
             cmd.append('bdist_wheel')
 
+        if verbose:
+            print("Package create command line: {}".format(' '.join(cmd)))
+            
         try:
             stdout = check_output(cmd).decode().strip()
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
+        if verbose:
+            print(stdout)
+            
         name = Package._find_package_name(stdout)
         files = []
 
@@ -79,6 +86,10 @@ class Package(object):
         if wheel:
             files.append(os.path.basename(Package._find_wheel_name(stdout)))
 
+        if verbose:
+            print("Package name: {}".format(name))
+            print("Files to upload: {}".format(files))
+            
         return Package(name, files)
 
 
@@ -106,6 +117,6 @@ class Index(object):
         if force:
             self.packages.discard(package)
         elif any(p.version == package.version for p in self.packages):
-            raise S3PyPiError('%s already exists! You should use a different version.' % package)
+            raise S3PyPiError('%s already exists! You should use a different version (use --force to override).' % package)
 
         self.packages.add(package)
