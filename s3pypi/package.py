@@ -14,6 +14,8 @@ __author__ = 'Matteo De Wint'
 __copyright__ = 'Copyright 2016, November Five'
 __license__ = 'MIT'
 
+log = logging.getLogger()
+
 
 class Package(object):
     """Python package."""
@@ -60,22 +62,20 @@ class Package(object):
         return match.group(1)
 
     @staticmethod
-    def create(wheel=True, sdist=True, verbose=False):
+    def create(wheel=True, sdist=True):
         cmd = [sys.executable, 'setup.py', 'sdist', '--formats', 'gztar']
 
         if wheel:
             cmd.append('bdist_wheel')
 
-        if verbose:
-            print("Package create command line: {}".format(' '.join(cmd)))
+        log.debug("Package create command line: {}".format(' '.join(cmd)))
             
         try:
             stdout = check_output(cmd).decode().strip()
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
-        if verbose:
-            print(stdout)
+        log.debug(stdout)
             
         name = Package._find_package_name(stdout)
         files = []
@@ -86,9 +86,8 @@ class Package(object):
         if wheel:
             files.append(os.path.basename(Package._find_wheel_name(stdout)))
 
-        if verbose:
-            print("Package name: {}".format(name))
-            print("Files to upload: {}".format(files))
+        log.debug("Package name: {}".format(name))
+        log.debug("Files to upload: {}".format(files))
             
         return Package(name, files)
 

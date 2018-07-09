@@ -1,4 +1,5 @@
 import os
+import logging
 
 import boto3
 from botocore.exceptions import ClientError
@@ -9,11 +10,13 @@ __author__ = 'Matteo De Wint'
 __copyright__ = 'Copyright 2016, November Five'
 __license__ = 'MIT'
 
+log = logging.getLogger()
+
 
 class S3Storage(object):
     """Abstraction for storing package archives and index files in an S3 bucket."""
 
-    def __init__(self, bucket, secret=None, region=None, bare=False, private=False, profile=None, verbose=False):
+    def __init__(self, bucket, secret=None, region=None, bare=False, private=False, profile=None):
         if profile:
             boto3.setup_default_session(profile_name=profile)        
         self.s3 = boto3.resource('s3', region_name=region)
@@ -21,7 +24,6 @@ class S3Storage(object):
         self.secret = secret
         self.index = '' if bare else 'index.html'
         self.acl = 'private' if private else 'public-read'
-        self.verbose = verbose
 
     def _object(self, package, filename):
         path = '%s/%s' % (package.directory, filename)
@@ -44,8 +46,7 @@ class S3Storage(object):
 
     def put_package(self, package):
         for filename in package.files:
-            if self.verbose:
-                print("Uploading file `{}`...".format(filename))
+            log.debug("Uploading file `{}`...".format(filename))
             with open(os.path.join('dist', filename), mode='rb') as f:
                 self._object(package, filename).put(
                     Body=f,
