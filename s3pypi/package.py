@@ -1,4 +1,4 @@
-import glob
+import logging
 import os
 import re
 import sys
@@ -69,14 +69,14 @@ class Package(object):
             cmd.append('bdist_wheel')
 
         log.debug("Package create command line: {}".format(' '.join(cmd)))
-            
+
         try:
             stdout = check_output(cmd).decode().strip()
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
         log.debug(stdout)
-            
+
         name = Package._find_package_name(stdout)
         files = []
 
@@ -88,7 +88,7 @@ class Package(object):
 
         log.debug("Package name: {}".format(name))
         log.debug("Files to upload: {}".format(files))
-            
+
         return Package(name, files)
 
 
@@ -116,6 +116,7 @@ class Index(object):
         if force:
             self.packages.discard(package)
         elif any(p.version == package.version for p in self.packages):
-            raise S3PyPiError('%s already exists! You should use a different version (use --force to override).' % package)
+            raise S3PyPiError(
+                '%s already exists! You should use a different version (use --force to override).' % package)
 
         self.packages.add(package)

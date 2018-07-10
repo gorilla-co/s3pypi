@@ -18,7 +18,7 @@ class S3Storage(object):
 
     def __init__(self, bucket, secret=None, region=None, bare=False, private=False, profile=None):
         if profile:
-            boto3.setup_default_session(profile_name=profile)        
+            boto3.setup_default_session(profile_name=profile)
         self.s3 = boto3.resource('s3', region_name=region)
         self.bucket = bucket
         self.secret = secret
