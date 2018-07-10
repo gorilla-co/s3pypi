@@ -1,6 +1,7 @@
 import glob
 import os
 import re
+import sys
 from collections import defaultdict
 from subprocess import check_output, CalledProcessError
 
@@ -12,6 +13,8 @@ from s3pypi.exceptions import S3PyPiError
 __author__ = 'Matteo De Wint'
 __copyright__ = 'Copyright 2016, November Five'
 __license__ = 'MIT'
+
+log = logging.getLogger()
 
 
 class Package(object):
@@ -45,31 +48,35 @@ class Package(object):
         match = re.search('^(copying files to|making hard links in) (.+)\.\.\.', text, flags=re.MULTILINE)
 
         if not match:
-            raise RuntimeError('Package name not found in:\n' + text)
+            raise RuntimeError('Package name not found! (use --verbose to view output)')
 
         return match.group(2)
 
     @staticmethod
     def _find_wheel_name(text):
-        match = re.search('creating \'.*(dist.*\.whl)\' and adding', text, flags=re.MULTILINE)
+        match = re.search("creating '.*(dist.*\.whl)' and adding", text, flags=re.MULTILINE)
 
         if not match:
-            raise RuntimeError('Wheel name not found in:\n' + text)
+            raise RuntimeError('Wheel name not found! (use --verbose to view output)')
 
         return match.group(1)
 
     @staticmethod
     def create(wheel=True, sdist=True):
-        cmd = ['python', 'setup.py', 'sdist', '--formats', 'gztar']
+        cmd = [sys.executable, 'setup.py', 'sdist', '--formats', 'gztar']
 
         if wheel:
             cmd.append('bdist_wheel')
 
+        log.debug("Package create command line: {}".format(' '.join(cmd)))
+            
         try:
             stdout = check_output(cmd).decode().strip()
         except CalledProcessError as e:
             raise RuntimeError(e.output.rstrip())
 
+        log.debug(stdout)
+            
         name = Package._find_package_name(stdout)
         files = []
 
@@ -79,6 +86,9 @@ class Package(object):
         if wheel:
             files.append(os.path.basename(Package._find_wheel_name(stdout)))
 
+        log.debug("Package name: {}".format(name))
+        log.debug("Files to upload: {}".format(files))
+            
         return Package(name, files)
 
 
@@ -106,6 +116,6 @@ class Index(object):
         if force:
             self.packages.discard(package)
         elif any(p.version == package.version for p in self.packages):
-            raise S3PyPiError('%s already exists! You should use a different version.' % package)
+            raise S3PyPiError('%s already exists! You should use a different version (use --force to override).' % package)
 
         self.packages.add(package)

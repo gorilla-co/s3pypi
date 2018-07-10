@@ -2,8 +2,9 @@ from __future__ import print_function
 
 import argparse
 import sys
+import logging
 
-from s3pypi import __prog__
+from s3pypi import __prog__, __version__
 from s3pypi.exceptions import S3PyPiError
 from s3pypi.package import Package
 from s3pypi.storage import S3Storage
@@ -11,6 +12,8 @@ from s3pypi.storage import S3Storage
 __author__ = 'Matteo De Wint'
 __copyright__ = 'Copyright 2016, November Five'
 __license__ = 'MIT'
+
+log = logging.getLogger()
 
 
 def create_and_upload_package(args):
@@ -35,11 +38,15 @@ def parse_args(raw_args):
     p.add_argument('--no-sdist', dest='sdist', action='store_false', help='Skip sdist distribution')
     p.add_argument('--bare', action='store_true', help='Store index as bare package name')
     p.add_argument('--private', action='store_true', help='Store S3 Keys as private objects')
+    p.add_argument('--verbose', action='store_true', help='Turn on verbose output.')
+    p.add_argument('--version', action='version', version=__version__)
     return p.parse_args(raw_args)
 
 
 def main():
     args = parse_args(sys.argv[1:])
+
+    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
 
     try:
         create_and_upload_package(args)

@@ -1,4 +1,5 @@
 import os
+import logging
 
 import boto3
 from botocore.exceptions import ClientError
@@ -8,6 +9,8 @@ from s3pypi.package import Index
 __author__ = 'Matteo De Wint'
 __copyright__ = 'Copyright 2016, November Five'
 __license__ = 'MIT'
+
+log = logging.getLogger()
 
 
 class S3Storage(object):
@@ -43,6 +46,7 @@ class S3Storage(object):
 
     def put_package(self, package):
         for filename in package.files:
+            log.debug("Uploading file `{}`...".format(filename))
             with open(os.path.join('dist', filename), mode='rb') as f:
                 self._object(package, filename).put(
                     Body=f,
