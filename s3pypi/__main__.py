@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 import argparse
-import sys
 import logging
+import sys
 
 from s3pypi import __prog__, __version__
 from s3pypi.exceptions import S3PyPiError
@@ -18,7 +18,14 @@ log = logging.getLogger()
 
 def create_and_upload_package(args):
     package = Package.create(args.wheel, args.sdist)
-    storage = S3Storage(args.bucket, args.secret, args.region, args.bare, args.private, args.profile)
+    storage = S3Storage(
+        args.bucket,
+        args.secret,
+        args.region,
+        args.bare,
+        args.private,
+        args.profile
+    )
 
     index = storage.get_index(package)
     index.add_package(package, args.force)
