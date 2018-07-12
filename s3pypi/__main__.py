@@ -16,19 +16,8 @@ __license__ = 'MIT'
 log = logging.getLogger()
 
 
-def create_and_upload_package(args):
-    package = Package.create(args.wheel, args.sdist)
-    storage = S3Storage(
-        args.bucket,
-        args.secret,
-        args.region,
-        args.bare,
-        args.private,
-        args.profile
-    )
-
-    index = storage.get_index(package)
-    index.add_package(package, args.force)
+def create_and_upload_package(storage, package, index, force=False):
+    index.add_package(package, force)
 
     storage.put_package(package)
     storage.put_index(package, index)
@@ -56,7 +45,18 @@ def main():
     log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
 
     try:
-        create_and_upload_package(args)
+        storage = S3Storage(
+            args.bucket,
+            args.secret,
+            args.region,
+            args.bare,
+            args.private,
+            args.profile
+        )
+        package = Package.create(args.wheel, args.sdist)
+        index = storage.get_index(package)
+
+        create_and_upload_package(storage, package, index, force=args.force)
     except S3PyPiError as e:
         print('error: %s' % e)
         sys.exit(1)
