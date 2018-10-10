@@ -45,7 +45,7 @@ class Package(object):
 
     @staticmethod
     def _find_package_name(text):
-        match = re.search('^(copying files to|making hard links in) (.+)\.\.\.', text, flags=re.MULTILINE)
+        match = re.search('^(copying files to |making hard links in |creating build/bdist\..*/wheel/)(.+)(\.\.\.|\.dist-info/WHEEL)', text, flags=re.MULTILINE)
 
         if not match:
             raise RuntimeError('Package name not found! (use --verbose to view output)')
@@ -53,20 +53,20 @@ class Package(object):
         return match.group(2)
 
     @staticmethod
-    def _find_wheel_name(text):
-        match = re.search("creating '.*(dist.*\.whl)' and adding", text, flags=re.MULTILINE)
+    def create(sdist=True, wheel=True, universal=False):
+        cmd = ['python', 'setup.py']
+        files = []
 
-        if not match:
-            raise RuntimeError('Wheel name not found! (use --verbose to view output)')
+        if not (sdist or wheel):
+            raise RuntimeError('Must create either sdist or wheel')
 
-        return match.group(1)
-
-    @staticmethod
-    def create(wheel=True, sdist=True):
-        cmd = [sys.executable, 'setup.py', 'sdist', '--formats', 'gztar']
+        if sdist:
+            cmd += ['sdist', '--formats', 'gztar']
 
         if wheel:
             cmd.append('bdist_wheel')
+            if universal:
+                cmd.append('--universal')
 
         log.debug("Package create command line: {}".format(' '.join(cmd)))
 
@@ -78,7 +78,6 @@ class Package(object):
         log.debug(stdout)
 
         name = Package._find_package_name(stdout)
-        files = []
 
         if sdist:
             files.append(name + '.tar.gz')
