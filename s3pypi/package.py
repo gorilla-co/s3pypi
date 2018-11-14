@@ -41,11 +41,11 @@ class Package(object):
 
     @property
     def directory(self):
-        return re.sub('[-_.]+', '-', self.name)
+        return re.sub(r'[-_.]+', '-', self.name)
 
     @staticmethod
     def _find_package_name(text):
-        match = re.search('^(copying files to|making hard links in) (.+)\.\.\.', text, flags=re.MULTILINE)
+        match = re.search(r'^(copying files to|making hard links in) (.+)\.\.\.', text, flags=re.MULTILINE)
 
         if not match:
             raise RuntimeError('Package name not found! (use --verbose to view output)')
@@ -54,7 +54,7 @@ class Package(object):
 
     @staticmethod
     def _find_wheel_name(text):
-        match = re.search("creating '.*?(dist.*\.whl)' and adding", text, flags=re.MULTILINE)
+        match = re.search(r"creating '.*?(dist.*\.whl)' and adding", text, flags=re.MULTILINE)
 
         if not match:
             raise RuntimeError('Wheel name not found! (use --verbose to view output)')
@@ -104,7 +104,7 @@ class Index(object):
     def parse(html):
         filenames = defaultdict(set)
 
-        for match in re.findall('<a href="((.+?-\d+\.\d+\.\d+).+)">', html):
+        for match in re.findall(r'<a href="((.+?-\d+\.\d+\.\d+).+)">', html):
             filenames[match[1]].add(match[0])
 
         return Index(Package(name, files) for name, files in filenames.items())
