@@ -1,0 +1,63 @@
+running sdist
+running egg_info
+creating distribution_costs.egg-info
+writing distribution_costs.egg-info/PKG-INFO
+writing dependency_links to distribution_costs.egg-info/dependency_links.txt
+writing requirements to distribution_costs.egg-info/requires.txt
+writing top-level names to distribution_costs.egg-info/top_level.txt
+writing manifest file 'distribution_costs.egg-info/SOURCES.txt'
+package init file 'gorilla/formulas/__init__.py' not found (or not a regular file)
+reading manifest file 'distribution_costs.egg-info/SOURCES.txt'
+writing manifest file 'distribution_costs.egg-info/SOURCES.txt'
+warning: sdist: standard file not found: should have one of README, README.rst, README.txt, README.md
+
+running check
+warning: check: missing required meta-data: url
+
+creating distribution_costs-0.1.0
+creating distribution_costs-0.1.0/gorilla
+creating distribution_costs-0.1.0/gorilla/formulas
+creating distribution_costs-0.1.0/distribution_costs.egg-info
+copying files to distribution_costs-0.1.0...
+copying setup.py -> distribution_costs-0.1.0
+copying gorilla/formulas/bo_distribution_costs.py -> distribution_costs-0.1.0/gorilla/formulas
+copying distribution_costs.egg-info/PKG-INFO -> distribution_costs-0.1.0/distribution_costs.egg-info
+copying distribution_costs.egg-info/SOURCES.txt -> distribution_costs-0.1.0/distribution_costs.egg-info
+copying distribution_costs.egg-info/dependency_links.txt -> distribution_costs-0.1.0/distribution_costs.egg-info
+copying distribution_costs.egg-info/requires.txt -> distribution_costs-0.1.0/distribution_costs.egg-info
+copying distribution_costs.egg-info/top_level.txt -> distribution_costs-0.1.0/distribution_costs.egg-info
+Writing distribution_costs-0.1.0/setup.cfg
+creating dist
+Creating tar archive
+removing 'distribution_costs-0.1.0' (and everything under it)
+running bdist_wheel
+running build
+running build_py
+creating build
+creating build/lib
+creating build/lib/gorilla
+creating build/lib/gorilla/formulas
+copying gorilla/formulas/bo_distribution_costs.py -> build/lib/gorilla/formulas
+warning: build_py: byte-compiling is disabled, skipping.
+
+installing to build/bdist.macosx-10.14-x86_64/wheel
+running install
+running install_lib
+creating build/bdist.macosx-10.14-x86_64
+creating build/bdist.macosx-10.14-x86_64/wheel
+creating build/bdist.macosx-10.14-x86_64/wheel/gorilla
+creating build/bdist.macosx-10.14-x86_64/wheel/gorilla/formulas
+copying build/lib/gorilla/formulas/bo_distribution_costs.py -> build/bdist.macosx-10.14-x86_64/wheel/gorilla/formulas
+warning: install_lib: byte-compiling is disabled, skipping.
+
+running install_egg_info
+Copying distribution_costs.egg-info to build/bdist.macosx-10.14-x86_64/wheel/distribution_costs-0.1.0-py3.7.egg-info
+running install_scripts
+creating build/bdist.macosx-10.14-x86_64/wheel/distribution_costs-0.1.0.dist-info/WHEEL
+creating 'dist/distribution_costs-0.1.0-py3-none-any.whl' and adding 'build/bdist.macosx-10.14-x86_64/wheel' to it
+adding 'gorilla/formulas/bo_distribution_costs.py'
+adding 'distribution_costs-0.1.0.dist-info/METADATA'
+adding 'distribution_costs-0.1.0.dist-info/WHEEL'
+adding 'distribution_costs-0.1.0.dist-info/top_level.txt'
+adding 'distribution_costs-0.1.0.dist-info/RECORD'
+removing build/bdist.macosx-10.14-x86_64/wheel

@@ -54,7 +54,7 @@ class Package(object):
 
     @staticmethod
     def _find_wheel_name(text):
-        match = re.search("creating '.*(dist.*\.whl)' and adding", text, flags=re.MULTILINE)
+        match = re.search("creating '.*?(dist.*\.whl)' and adding", text, flags=re.MULTILINE)
 
         if not match:
             raise RuntimeError('Wheel name not found! (use --verbose to view output)')
