@@ -17,10 +17,16 @@ def private():
     return True
 
 
-@pytest.fixture(scope='function', params=['helloworld-0.1', 's3pypi-0.1.3'])
+@pytest.fixture(scope='function', params=['helloworld-0.1', 's3pypi-0.1.3', 'distribution_costs-0.1.0'])
 def sdist_output(request):
     with open(os.path.join('tests', 'data', 'sdist_output', request.param)) as f:
         yield f.read(), request.param
+
+
+@pytest.fixture(scope='function', params=['distribution_costs-0.1.0'])
+def bdist_wheel_output(request):
+    with open(os.path.join('tests', 'data', 'sdist_output', request.param)) as f:
+        yield f.read(), 'dist/{}-py3-none-any.whl'.format(request.param)
 
 
 @pytest.fixture(scope='function', params=[
