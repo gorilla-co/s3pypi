@@ -41,7 +41,7 @@ class Package(object):
 
     @property
     def directory(self):
-        return re.sub(r'[-_.]+', '-', self.name)
+        return re.sub(r'[-_.]+', '-', self.name.lower())
 
     @staticmethod
     def _find_package_name(text):
