@@ -31,7 +31,7 @@ def bdist_wheel_output(request):
 
 @pytest.fixture(scope='function', params=[
     ('s3pypi', {Package('s3pypi-' + v, {'s3pypi-%s.tar.gz' % v, 's3pypi-%s-py2-none-any.whl' % v})
-                for v in ('0.1.1', '0.1.2')})
+                for v in ('0', '0!0', '0+local', '0.0', '0.1.1', '0.1.2', '0.dev0', '0.post0', '0a0', '0rc0')})
 ])
 def index_html(request):
     name, packages = request.param

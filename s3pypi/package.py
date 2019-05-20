@@ -104,7 +104,8 @@ class Index(object):
     def parse(html):
         filenames = defaultdict(set)
 
-        for match in re.findall(r'<a href=".+">((.+?-\d+\.\d+\.\d+).+)</a>', html):
+        for match in re.findall(r'<a href=".+">((.+?-((?:\d+!)?\d+(?:\.\d+)*(?:(?:a|b|rc)\d+)?(?:\.post\d+)?' +
+                                r'(?:\.dev\d+)?)(?:\+([a-zA-Z0-9\.]+))?).*(?:\.whl|\.tar\.gz))</a>', html):
             filenames[match[1]].add(match[0])
 
         return Index(Package(name, files) for name, files in filenames.items())
