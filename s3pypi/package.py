@@ -62,30 +62,36 @@ class Package(object):
         return match.group(1)
 
     @staticmethod
-    def create(wheel=True, sdist=True):
-        cmd = [sys.executable, 'setup.py', 'sdist', '--formats', 'gztar']
-
-        if wheel:
-            cmd.append('bdist_wheel')
-
-        log.debug("Package create command line: {}".format(' '.join(cmd)))
-
-        try:
-            stdout = check_output(cmd).decode().strip()
-        except CalledProcessError as e:
-            raise RuntimeError(e.output.rstrip())
-
-        log.debug(stdout)
-
-        name = Package._find_package_name(stdout)
+    def create(wheel=True, sdist=True, dist_path=None):
         files = []
+        if not dist_path:
+            cmd = [sys.executable, 'setup.py', 'sdist', '--formats', 'gztar']
 
-        if sdist:
-            files.append(name + '.tar.gz')
+            if wheel:
+                cmd.append('bdist_wheel')
 
-        if wheel:
-            files.append(os.path.basename(Package._find_wheel_name(stdout)))
+            log.debug("Package create command line: {}".format(' '.join(cmd)))
 
+            try:
+                stdout = check_output(cmd).decode().strip()
+            except CalledProcessError as e:
+                raise RuntimeError(e.output.rstrip())
+
+            log.debug(stdout)
+
+            name = Package._find_package_name(stdout)
+
+            if sdist:
+                files.append(name + '.tar.gz')
+
+            if wheel:
+                files.append(os.path.basename(Package._find_wheel_name(stdout)))
+        else:
+            for f in os.listdir(dist_path):
+                if f.endswith('.tar.gz'):
+                    name = f[:-7]
+                files.append(f)
+                
         log.debug("Package name: {}".format(name))
         log.debug("Files to upload: {}".format(files))
 
