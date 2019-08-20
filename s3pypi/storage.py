@@ -1,14 +1,10 @@
-import os
 import logging
+import os
 
 import boto3
 from botocore.exceptions import ClientError
 
 from s3pypi.package import Index
-
-__author__ = "Matteo De Wint"
-__copyright__ = "Copyright 2016, November Five"
-__license__ = "MIT"
 
 log = logging.getLogger()
 

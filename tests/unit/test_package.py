@@ -1,7 +1,7 @@
 import pytest
 
 from s3pypi.exceptions import S3PyPiError
-from s3pypi.package import Package, Index
+from s3pypi.package import Index, Package
 
 
 def test_find_package_name(sdist_output):

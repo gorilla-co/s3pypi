@@ -31,6 +31,8 @@ test:
 lint:
 	poetry run flake8
 	poetry run black . --check --quiet
+	poetry run isort --check-only --quiet
 
 format:
+	poetry run isort --apply
 	poetry run black .

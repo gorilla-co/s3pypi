@@ -1,17 +1,13 @@
 from __future__ import print_function
 
 import argparse
-import sys
 import logging
+import sys
 
 from s3pypi import __prog__, __version__
 from s3pypi.exceptions import S3PyPiError
 from s3pypi.package import Package
 from s3pypi.storage import S3Storage
-
-__author__ = "Matteo De Wint"
-__copyright__ = "Copyright 2016, November Five"
-__license__ = "MIT"
 
 log = logging.getLogger()
 

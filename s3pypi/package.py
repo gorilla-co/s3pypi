@@ -3,16 +3,12 @@ import os
 import re
 import sys
 from collections import defaultdict
-from subprocess import check_output, CalledProcessError
+from subprocess import CalledProcessError, check_output
 
 from jinja2 import Environment, PackageLoader
 
 from s3pypi import __prog__
 from s3pypi.exceptions import S3PyPiError
-
-__author__ = "Matteo De Wint"
-__copyright__ = "Copyright 2016, November Five"
-__license__ = "MIT"
 
 log = logging.getLogger()
 
