@@ -25,8 +25,8 @@ def test_render_index(index_html):
 
 
 def test_add_package():
-    pkg1 = Package('test-0.0.1', ['foo'])
-    pkg2 = Package('test-0.0.2', ['bar'])
+    pkg1 = Package("test-0.0.1", ["foo"])
+    pkg2 = Package("test-0.0.2", ["bar"])
 
     index = Index([pkg1])
     index.add_package(pkg2)
@@ -34,8 +34,8 @@ def test_add_package():
 
 
 def test_add_package_exists():
-    pkg1 = Package('test-0.0.1', ['foo'])
-    pkg2 = Package('test-0.0.1', ['bar'])
+    pkg1 = Package("test-0.0.1", ["foo"])
+    pkg2 = Package("test-0.0.1", ["bar"])
 
     index = Index([pkg1])
     with pytest.raises(S3PyPiError):
@@ -43,8 +43,8 @@ def test_add_package_exists():
 
 
 def test_add_package_force():
-    pkg1 = Package('test-0.0.1', ['foo'])
-    pkg2 = Package('test-0.0.1', ['bar'])
+    pkg1 = Package("test-0.0.1", ["foo"])
+    pkg2 = Package("test-0.0.1", ["bar"])
 
     index = Index([pkg1])
     index.add_package(pkg2, force=True)
@@ -52,5 +52,5 @@ def test_add_package_force():
 
 
 def test_directory_normalize_package_name():
-    pkg = Package('company.test-0.0.1', ['foo'])
-    assert pkg.directory == 'company-test'
+    pkg = Package("company.test-0.0.1", ["foo"])
+    assert pkg.directory == "company-test"
