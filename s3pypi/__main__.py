@@ -25,7 +25,7 @@ def create_and_upload_package(args):
     storage.put_index(package, index)
 
 
-def parse_args(raw_args):
+def parse_args(args):
     p = argparse.ArgumentParser(prog=__prog__)
     p.add_argument("--bucket", required=True, help="S3 bucket")
     p.add_argument("--secret", help="S3 secret")
@@ -51,11 +51,11 @@ def parse_args(raw_args):
     )
     p.add_argument("--verbose", action="store_true", help="Turn on verbose output.")
     p.add_argument("--version", action="version", version=__version__)
-    return p.parse_args(raw_args)
+    return p.parse_args(args)
 
 
-def main():
-    args = parse_args(sys.argv[1:])
+def main(*args):
+    args = parse_args(args or sys.argv[1:])
 
     log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
 
