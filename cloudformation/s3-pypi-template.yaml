@@ -1,0 +1,160 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Authenticated PyPi S3 Template
+Parameters:
+  PyPiS3BucketName:
+    Description: Name of the PyPi S3 bucket
+    Type: String
+
+Outputs:
+  PyPiCloudFrontOriginAccessId:
+    Description: The origin access ID that was granted read access to the PyPi S3 bucket
+    Value: !Ref PyPiCloudFrontOriginAccessId
+  PublishS3PyPiPackagesPolicy:
+    Description: >-
+      The custom managed IAM role that has the privileges required to publish packages into
+      the PyPi S3 bucket
+    Value: !Ref PublishS3PyPiPackagesPolicy
+  ManageS3PyPiUserCredentialsPolicy:
+    Description: >-
+      The custom managed IAM role that has the privileges required to read, write, and update
+      the PyPi user store
+    Value: !Ref ManageS3PyPiUserCredentialsPolicy
+  ReadS3PyPiBucketPolicy:
+    Description: >-
+      Policy that grants read access to the complete PyPi S3 bucket (intended for
+      the CloudFront distribution's Lambda@Edge functions that need to read, e.g., the user store).
+    Value: !Ref ReadS3PyPiBucketPolicy
+
+Resources:
+  PyPiS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Ref: PyPiS3BucketName
+
+  PyPiCloudFrontOriginAccessId:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment:
+          Fn::Join:
+            - ''
+            - - 'Origin Access Identity used by the PyPiCloudfrontDistribution to access objects in the bucket '
+              - Ref: PyPiS3BucketName
+
+  PyPiS3BucketBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: PyPiS3Bucket
+      PolicyDocument:
+        Statement:
+        - Sid: AllowPyPiS3ObjectListing
+          Action:
+          - s3:ListBucket
+          Effect: Allow
+          Principal:
+            CanonicalUser: !GetAtt PyPiCloudFrontOriginAccessId.S3CanonicalUserId
+          Resource:
+          - Fn::Sub: 'arn:aws:s3:::${PyPiS3Bucket}'
+        - Sid: AllowPyPiS3ObjectAccess
+          Action:
+          - s3:GetObject
+          Effect: Allow
+          Principal:
+            CanonicalUser: !GetAtt PyPiCloudFrontOriginAccessId.S3CanonicalUserId
+          Resource:
+            Fn::Sub: 'arn:aws:s3:::${PyPiS3Bucket}/*'
+
+  PublishS3PyPiPackagesPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy for updating packages in the PyPi S3 bucket
+      ManagedPolicyName: !Sub 'Publish-into-${PyPiS3Bucket}'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowUserToSeeBucketListInTheConsole
+          Action:
+          - s3:ListAllMyBuckets
+          - s3:GetBucketLocation
+          Effect: Allow
+          Resource:
+          - arn:aws:s3:::*
+        - Sid: AllowObjectListingInRootAndPackageFolder
+          Effect: Allow
+          Action:
+          - s3:ListBucket
+          Resource:
+          - Fn::Sub: 'arn:aws:s3:::${PyPiS3Bucket}'
+          Condition:
+            StringLike:
+              s3:prefix:
+              - 'packages/*'
+        - Sid: AllowPackagesReadWriteAccess
+          Effect: Allow
+          Action:
+          - s3:GetObject
+          - s3:PutObject
+          Resource:
+          - Fn::Sub: 'arn:aws:s3:::${PyPiS3Bucket}/packages/*'
+
+  ManageS3PyPiUserCredentialsPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Policy that grants read and write access to the objects in the PyPi S3 bucket's /config folder
+      ManagedPolicyName: !Sub 'Manage-Users-of-${PyPiS3Bucket}'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowUserToSeeBucketListInTheConsole
+          Action:
+          - s3:ListAllMyBuckets
+          - s3:GetBucketLocation
+          Effect: Allow
+          Resource:
+          - arn:aws:s3:::*
+        - Sid: AllowObjectListingInCompleteBucket
+          Effect: Allow
+          Action:
+          - s3:ListBucket
+          Resource:
+          - Fn::Sub: 'arn:aws:s3:::${PyPiS3Bucket}'
+        - Sid: AllowConfigReadWriteAccess
+          Effect: Allow
+          Action:
+          - s3:GetObject
+          - s3:PutObject
+          Resource:
+          - Fn::Sub: 'arn:aws:s3:::${PyPiS3Bucket}/config/'
+          - Fn::Sub: 'arn:aws:s3:::${PyPiS3Bucket}/config/*'
+
+  ReadS3PyPiBucketPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: >-
+        Policy that grants read access to the complete PyPi S3 bucket (intended for
+        the CloudFront distribution's Lambda@Edge functions that need to read, e.g., the user store).
+      ManagedPolicyName: !Sub 'Read-${PyPiS3Bucket}'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowUserToSeeBucketListInTheConsole
+            Action:
+              - s3:ListAllMyBuckets
+              - s3:GetBucketLocation
+            Effect: Allow
+            Resource:
+              - arn:aws:s3:::*
+          - Sid: AllowObjectListingInCompleteBucket
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource:
+              - Fn::Sub: 'arn:aws:s3:::${PyPiS3Bucket}'
+          - Sid: AllowObjectReadAccess
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - Fn::Sub: 'arn:aws:s3:::${PyPiS3Bucket}/*'

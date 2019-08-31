@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  SAM Template for S3 PyPi Auth Deployment
+
+Parameters:
+  S3PyPiDomainName:
+    Description: >-
+      The PyPi repository's public domain name (used for constructing resource and role names).
+    Type: String
+
+#  ReadS3PyPiBucketPolicy:
+#    Description: >-
+#      Policy that grants read access to the complete PyPi S3 bucket.
+#    Type: String
+#
+  S3PyPiBucketName:
+    Description: >-
+      Name of the S3 bucket that provides the PyPi repository's storage backend.
+    Type: String
+
+Outputs:
+  S3PyPiAuthFunctionVersion:
+    Description: "ARN of the last published version of the S3 PyPi Basic Auth Lambda Function"
+    Value: !Ref S3PyPiAuthFunction.Version
+
+  S3PyPiAuthFunctionIamRole:
+    Description: "IAM Role created for S3 PyPi Basic Auth function"
+    Value: !GetAtt S3PyPiLambdaRole.Arn
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  S3PyPiLambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      # see the warning in https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html#aws-resource-iam-role-properties
+      # for an explanation why we add the region identifier
+      RoleName: !Sub '${S3PyPiDomainName}-LambdaEgdeExecutionRole-${AWS::Region}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: "AllowLambdaServiceToAssumeRole"
+            Effect: Allow
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+                - 'edgelambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+          # let the lambda function read the CloudFront distribution config so it can determine the bucket name
+        - 'arn:aws:iam::aws:policy/CloudFrontReadOnlyAccess'
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                  - s3:GetObjectVersion
+                  - s3:GetLifecycleConfiguration
+                Effect: Allow
+                Resource:
+                  - Fn::Sub:
+                      - arn:${AWS::Partition}:s3:::${bucketName}
+                      - bucketName: &id001
+                          Ref: S3PyPiBucketName
+                  - Fn::Sub:
+                      - arn:${AWS::Partition}:s3:::${bucketName}/*
+                      - bucketName: *id001
+          PolicyName: ReadPyPiBucket
+
+  S3PyPiAuthFunction:
+    # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: >-
+        Lambda@Edge viewer request function that requires the client to send an HTTP basic auth header with credentials
+        that match an entry in the user store in the S3 PyPi bucket's config "folder".
+      FunctionName:
+        Fn::Join:
+          - '_'
+          - Fn::Split:
+            - '.'
+            - !Sub '${S3PyPiDomainName}-viewer-request-auth'
+      CodeUri: s3pypi_auth/
+      Handler: app.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt 'S3PyPiLambdaRole.Arn'
+#      Policies:
+#        - S3ReadPolicy:
+#            BucketName: !Ref S3PyPiBucketName
+      Runtime: python3.7
+      # see https://github.com/awslabs/serverless-application-model/blob/master/docs/safe_lambda_deployments.rst
+      AutoPublishAlias: live

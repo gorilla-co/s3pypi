@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Authenticated PyPi S3 Template
+Outputs:
+  CNAMERecordValue:
+    Description: The value of the CNAME or alias record of the configured (sub)domain.
+    Value: !GetAtt PyPiCloudfrontDistribution.DomainName
+
+Parameters:
+  DomainName:
+    Description: >-
+      The (sub)domain that you want to use for your PyPi repository (e.g. pypi.yourcompany.com)
+    Type: String
+  AcmCertificateArn:
+    Description: >-
+      ARN of the ACM certificate for the domain name, must be registered in us-east-1
+    Type: String
+  PyPiS3BucketName:
+    Description: Name of the PyPi S3 bucket
+    Type: String
+  PyPiCloudFrontOriginAccessId:
+    Description: Origin Access ID that was granted access to the PyPi S3 bucket
+    Type: String
+  S3PyPiAuthFunctionVersion:
+    Description: Versioned ARN of the viewer request lambda function responsible for HTTP basic authentication
+    Type: String
+
+Resources:
+  PyPiCloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+        - Ref: DomainName
+        Comment:
+          Fn::Sub: >-
+            Authenticating CloudFront distribution in front of the S3 PyPi repository bucket ${PyPiS3BucketName}
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - GET
+          - HEAD
+          Compress: false
+          DefaultTTL: 120
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            Headers: []
+            QueryString: false
+          LambdaFunctionAssociations:
+          - EventType: viewer-request
+            LambdaFunctionARN: !Ref S3PyPiAuthFunctionVersion
+          TargetOriginId: PyPiS3BucketOrigin
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: ''
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: false
+        Origins:
+        - Id: PyPiS3BucketOrigin
+          S3OriginConfig:
+            OriginAccessIdentity:
+              Fn::Sub: 'origin-access-identity/cloudfront/${PyPiCloudFrontOriginAccessId}'
+          DomainName:
+            Fn::Sub: '${PyPiS3BucketName}.s3.${AWS::Region}.amazonaws.com'
+          OriginPath: '/packages'
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn:
+            Ref: AcmCertificateArn
+          MinimumProtocolVersion: TLSv1.2_2018
+          SslSupportMethod: sni-only
