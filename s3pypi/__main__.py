@@ -21,7 +21,7 @@ def create_and_upload_package(args):
     index = storage.get_index(package)
     index.add_package(package, args.force)
 
-    storage.put_package(package)
+    storage.put_package(package, args.dist_path)
     storage.put_index(package, index)
 
 
@@ -39,9 +39,7 @@ def parse_args(args):
         "--no-sdist", dest="sdist", action="store_false", help="Skip sdist distribution"
     )
     p.add_argument(
-        "--dist-path",
-        dest="dist_path",
-        help="Path to directory with wheel/sdist to be uploaded",
+        "--dist-path", help="Path to directory with wheel/sdist to be uploaded"
     )
     p.add_argument(
         "--bare", action="store_true", help="Store index as bare package name"
