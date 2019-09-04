@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 import boto3
 from botocore.exceptions import ClientError
@@ -46,10 +46,11 @@ class S3Storage(object):
             ACL=self.acl,
         )
 
-    def put_package(self, package):
+    def put_package(self, package, dist_path=None):
         for filename in package.files:
-            log.debug("Uploading file `{}`...".format(filename))
-            with open(os.path.join("dist", filename), mode="rb") as f:
+            path = Path(dist_path or "dist", filename)
+            log.debug(f"Uploading file `{path}`...")
+            with open(path, mode="rb") as f:
                 self._object(package, filename).put(
                     Body=f, ContentType="application/x-gzip", ACL=self.acl
                 )
