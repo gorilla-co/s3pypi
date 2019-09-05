@@ -2,7 +2,6 @@ import os
 import shutil
 import tempfile
 from contextlib import contextmanager
-from pathlib import Path
 
 import boto3
 import pytest
@@ -25,16 +24,19 @@ def chdir():
 
 @pytest.fixture(scope="session")
 def project_dir(chdir):
-    projects_dir = Path(__file__).parent.parent / "data" / "projects"
+    projects_dir = os.path.join(os.path.dirname(__file__), "..", "data", "projects")
 
     @contextmanager
     def _project_dir(name):
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            src_dir = projects_dir / name
-            dst_dir = Path(tmp_dir, name)
+        tmp_dir = tempfile.mkdtemp()
+        try:
+            src_dir = os.path.join(projects_dir, name)
+            dst_dir = os.path.join(tmp_dir, name)
             shutil.copytree(src_dir, dst_dir)
             with chdir(dst_dir):
                 yield dst_dir
+        finally:
+            shutil.rmtree(tmp_dir)
 
     return _project_dir
 
