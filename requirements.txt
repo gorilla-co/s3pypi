@@ -1,6 +1,0 @@
-basicauth~=0.4.1
-boto3
-botocore
-Jinja2
-passlib~=1.7.1
-wheel
