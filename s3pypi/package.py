@@ -40,19 +40,6 @@ class Package(object):
         return re.sub(r"[-_.]+", "-", self.name.lower())
 
     @staticmethod
-    def _find_package_name(text):
-        match = re.search(
-            r"^(copying files to|making hard links in) (.+)\.\.\.",
-            text,
-            flags=re.MULTILINE,
-        )
-
-        if not match:
-            raise RuntimeError("Package name not found! (use --verbose to view output)")
-
-        return match.group(2)
-
-    @staticmethod
     def _find_wheel_name(text):
         match = re.search(
             r"creating '.*?(dist.*\.whl)' and adding", text, flags=re.MULTILINE
@@ -67,7 +54,12 @@ class Package(object):
     def create(wheel=True, sdist=True, dist_path=None):
         files = []
         if not dist_path:
-            cmd = [sys.executable, "setup.py", "sdist", "--formats", "gztar"]
+            cmd = [sys.executable, "setup.py"]
+
+            name = check_output(cmd + ["--fullname"]).decode().strip()
+
+            if sdist:
+                cmd.extend(["sdist", "--formats", "gztar"])
 
             if wheel:
                 cmd.append("bdist_wheel")
@@ -80,8 +72,6 @@ class Package(object):
                 raise RuntimeError(e.output.rstrip())
 
             log.debug(stdout)
-
-            name = Package._find_package_name(stdout)
 
             if sdist:
                 files.append(name + ".tar.gz")

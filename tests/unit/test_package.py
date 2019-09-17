@@ -4,11 +4,6 @@ from s3pypi.exceptions import S3PyPiError
 from s3pypi.package import Index, Package
 
 
-def test_find_package_name(sdist_output):
-    stdout, expected_name = sdist_output
-    assert Package._find_package_name(stdout) == expected_name
-
-
 def test_find_wheel_name(bdist_wheel_output):
     stdout, expected_name = bdist_wheel_output
     assert Package._find_wheel_name(stdout) == expected_name
