@@ -4,6 +4,7 @@ import re
 import sys
 from collections import defaultdict
 from subprocess import CalledProcessError, check_output
+from zipfile import ZipFile
 
 from jinja2 import Environment, PackageLoader
 
@@ -51,6 +52,20 @@ class Package(object):
         return match.group(1)
 
     @staticmethod
+    def _find_name_from_wheel_metadata(text):
+        name_match = re.search(
+            r"^Name: (.*)", text, flags=re.MULTILINE
+        )
+        version_match = re.search(
+            r"^Version: (.*)", text, flags=re.MULTILINE
+        )
+
+        if not name_match or not version_match:
+            raise RuntimeError("Wheel name not found! (use --verbose to view output)")
+
+        return "{}-{}".format(name_match.group(1), version_match.group(1))
+
+    @staticmethod
     def create(wheel=True, sdist=True, dist_path=None):
         files = []
         if not dist_path:
@@ -80,8 +95,14 @@ class Package(object):
                 files.append(os.path.basename(Package._find_wheel_name(stdout)))
         else:
             for f in os.listdir(dist_path):
-                if f.endswith(".tar.gz"):
+                if sdist and f.endswith(".tar.gz"):
                     name = f[:-7]
+                if wheel and f.endswith(".whl"):
+                    with ZipFile(os.path.join(dist_path, f), "r") as whl:
+                        for fname in whl.namelist():
+                            if fname.endswith("METADATA"):
+                                name = Package._find_name_from_wheel_metadata(whl.open(fname).read().decode())
+
                 files.append(f)
 
         log.debug("Package name: {}".format(name))
