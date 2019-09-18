@@ -27,6 +27,4 @@ def test_main_upload_wheel_package_from_custom_dist_path(project_dir, s3_bucket)
         s3pypi("--dist-path", "helloworld-dist", "--bucket", s3_bucket.name)
 
     assert s3_bucket.Object("hello-world/index.html").get()
-    assert s3_bucket.Object(
-        "hello-world/hello_world-0.1.0-py{}-none-any.whl".format(sys.version_info.major)
-    ).get()
+    assert s3_bucket.Object("hello-world/hello_world-0.1.0-py3-none-any.whl").get()
