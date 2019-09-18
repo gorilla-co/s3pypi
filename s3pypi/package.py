@@ -53,12 +53,8 @@ class Package(object):
 
     @staticmethod
     def _find_name_from_wheel_metadata(text):
-        name_match = re.search(
-            r"^Name: (.*)", text, flags=re.MULTILINE
-        )
-        version_match = re.search(
-            r"^Version: (.*)", text, flags=re.MULTILINE
-        )
+        name_match = re.search(r"^Name: (.*)", text, flags=re.MULTILINE)
+        version_match = re.search(r"^Version: (.*)", text, flags=re.MULTILINE)
 
         if not name_match or not version_match:
             raise RuntimeError("Wheel name not found! (use --verbose to view output)")
@@ -101,7 +97,9 @@ class Package(object):
                     with ZipFile(os.path.join(dist_path, f), "r") as whl:
                         for fname in whl.namelist():
                             if fname.endswith("METADATA"):
-                                name = Package._find_name_from_wheel_metadata(whl.open(fname).read().decode())
+                                name = Package._find_name_from_wheel_metadata(
+                                    whl.open(fname).read().decode()
+                                )
 
                 files.append(f)
 

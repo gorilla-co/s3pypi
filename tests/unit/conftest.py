@@ -33,10 +33,12 @@ def bdist_wheel_output(request):
     with open(os.path.join("tests", "data", "sdist_output", request.param)) as f:
         yield f.read(), "dist/{}-py3-none-any.whl".format(request.param)
 
+
 @pytest.fixture(scope="function", params=["hello-world-0.1.0"])
 def wheel_metadata(request):
     with open(os.path.join("tests", "data", "wheel_metadata", request.param)) as f:
         yield f.read(), request.param
+
 
 @pytest.fixture(
     scope="function",
