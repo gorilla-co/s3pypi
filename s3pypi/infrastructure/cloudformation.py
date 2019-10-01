@@ -50,11 +50,11 @@ def _read_file(template_fs_path: t.Union[str, os.PathLike]) -> str:
         return ''.join(template_file)
 
 
-def template_source_path(name):
+def template_source_path(name) -> pathlib.Path:
     return _TEMPLATE_SOURCE_FOLDER / name
 
 
-def packaged_template_path(name):
+def packaged_template_path(name) -> pathlib.Path:
     _PACKAGED_TEMPLATES_FOLDER.mkdir(exist_ok=True)
     return _PACKAGED_TEMPLATES_FOLDER / name
 
