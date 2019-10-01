@@ -174,8 +174,10 @@ def parse_args(raw_args: t.Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog=__prog__,
                                      description='utility for managing the entries in the S3 PyPi user store')
     parser.add_argument('-p', '--profile',  help='optional name of the boto3 profile')
-    parser.add_argument('-v', '--verbose', action='store_true', help='turn on verbose output.')
-    parser.add_argument('-d', '--debug', action='store_true', help='turn on debug output.')
+    parser.add_argument('-l', '--logfile', type=argparse.FileType(mode='a', bufsize=1, encoding='UTF-8'),
+                        help='file the logs are appended to (default: stderr)')
+    parser.add_argument('-v', '--verbose', action='store_true', help='turn on verbose logs.')
+    parser.add_argument('-d', '--debug', action='store_true', help='turn on debug logs.')
     parser.add_argument('userstore_uri', metavar='USERSTORE_URI', type=s3_object_id,
                         help='S3-URI of the user store object')
 
@@ -199,7 +201,7 @@ def parse_args(raw_args: t.Sequence[str]) -> argparse.Namespace:
 # noinspection DuplicatedCode
 def initialize_logging(args):
     log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    log_handler = logging.StreamHandler()
+    log_handler = logging.StreamHandler(stream=args.logfile)
     log_handler.setFormatter(log_formatter)
     root_logger = logging.getLogger()
     root_logger.addHandler(log_handler)

@@ -28,8 +28,10 @@ def parse_args(raw_args: t.Sequence[str]) -> argparse.Namespace:
                         help='optional name of the boto3 profile')
     parser.add_argument('-r', '--region',
                         help='optional AWS region where to deploy the non-global infrastructure')
-    parser.add_argument('-v', '--verbose', action='store_true', help='turn on verbose output.')
-    parser.add_argument('-d', '--debug', action='store_true', help='turn on debug output.')
+    parser.add_argument('-l', '--logfile', type=argparse.FileType(mode='a', bufsize=1, encoding='UTF-8'),
+                        help='file the logs are appended to (default: stderr)')
+    parser.add_argument('-v', '--verbose', action='store_true', help='turn on verbose logs.')
+    parser.add_argument('-d', '--debug', action='store_true', help='turn on debug logs.')
     parser.add_argument('domain', help='the public domain name of the S3 PyPi repository '
                                        '(serves also as the name of the repository\'s S3 bucket '
                                        'unless the --bucket option is specified)')
@@ -84,7 +86,7 @@ def deploy_bucket_and_roles(bucket_name: str,
 # noinspection DuplicatedCode
 def initialize_logging(args):
     log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    log_handler = logging.StreamHandler()
+    log_handler = logging.StreamHandler(stream=args.logfile)
     log_handler.setFormatter(log_formatter)
     root_logger = logging.getLogger()
     root_logger.addHandler(log_handler)
