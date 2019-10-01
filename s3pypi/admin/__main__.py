@@ -61,8 +61,7 @@ def build_user_store_object(args):
     aws_session = get_aws_session(args)
     s3 = aws_session.resource('s3')
     _log.debug('constructing s3.Object(%s, %s)', bucket_name, key)
-    user_store_object = s3.Object(bucket_name, key)
-    return user_store_object
+    return s3.Object(bucket_name, key)
 
 
 def s3_text_object_lines(s3_object, encoding='utf-8', raise_not_found=True) -> t.Iterator[str]:

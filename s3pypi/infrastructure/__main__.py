@@ -1,14 +1,15 @@
 import argparse
-import sys
+import json
 import logging
 import re
+import sys
 import textwrap
 import typing as t
 
 import boto3.session
 
-from ..infrastructure import __prog__
 from .cloudformation import Parameter, CloudFormationService, SAM
+from ..infrastructure import __prog__
 
 __author__ = 'Christoph Ludwig'
 __copyright__ = 'Copyright 2019, Haufe Group'
@@ -46,16 +47,9 @@ def get_aws_session(profile: str = None, region: str = None) -> boto3.session.Se
     return boto3.session.Session(profile_name=profile, region_name=region)
 
 
-class OriginAccessIdAndPolicies(t.NamedTuple):
-    origin_access_id: str
-    publish_packages_policy: str
-    manage_users_policy: str
-    read_bucket_policy: str
-
-
 def as_stack_name(name: str) -> str:
     """
-    Transform the specified name into a valid CloudForm stack name (i.e., a name that matches the
+    Transform the specified name into a valid CloudFormation stack name (i.e., a name that matches the
     regular expression `[a-zA-Z][-a-zA-Z0-9]*`.
 
     :param name: the candidate name
@@ -66,21 +60,6 @@ def as_stack_name(name: str) -> str:
         prefix = 'stack' if s.startswith('-') else 'stack-'
         s = prefix + s
     return s
-
-
-def deploy_bucket_and_roles(bucket_name: str,
-                            cloudformation_service: CloudFormationService) -> OriginAccessIdAndPolicies:
-    outputs = cloudformation_service.create_stack(
-        stack_name=as_stack_name(f'{bucket_name}-bucket-and-policies'),
-        template_name='s3-pypi-template.yaml',
-        parameters=Parameter('PyPiS3BucketName', bucket_name),
-        capabilities='CAPABILITY_NAMED_IAM',
-        waiter_delay=10
-    )
-    return OriginAccessIdAndPolicies(origin_access_id=outputs.get('PyPiCloudFrontOriginAccessId'),
-                                     publish_packages_policy=outputs.get('PublishS3PyPiPackagesPolicy'),
-                                     manage_users_policy=outputs.get('ManageS3PyPiUserCredentialsPolicy'),
-                                     read_bucket_policy=outputs.get('ReadS3PyPiBucketPolicy'))
 
 
 # noinspection DuplicatedCode
@@ -108,18 +87,24 @@ def main() -> None:
         regional_session = get_aws_session(profile=args.profile, region=args.region)
         regional_cf_service = CloudFormationService(regional_session)
         bucket_name = args.bucket or args.domain
-        origin_access_id, publish_packages_policy, manage_users_policy, read_bucket_policy = \
-            deploy_bucket_and_roles(bucket_name=bucket_name,
-                                    cloudformation_service=regional_cf_service)
 
-        virginia_session = get_aws_session(profile=args.profile, region='us-east-1')
-        virginia_sam_service = SAM(virginia_session, args.sam_bucket)
+        bucket_and_policies = regional_cf_service.create_stack(
+            stack_name=as_stack_name(f'{bucket_name}-bucket-and-policies'),
+            template_name='s3-pypi-template.yaml',
+            parameters=Parameter('PyPiS3BucketName', bucket_name),
+            capabilities='CAPABILITY_NAMED_IAM',
+            waiter_delay=10
+        )
+        origin_access_id = bucket_and_policies.get('PyPiCloudFrontOriginAccessId')
+
+        # CloudFront requires the Lambda@Edge function to be deployed in N. Virginia
+        n_virginia_session = get_aws_session(profile=args.profile, region='us-east-1')
+        virginia_sam_service = SAM(n_virginia_session, args.sam_bucket)
         sam_outputs = virginia_sam_service.create_stack(
             stack_name=as_stack_name(f'{args.domain}-lambda-edge'),
             template_name='s3-pypi-auth-template.yaml',
             parameters=(
                 Parameter('S3PyPiDomainName', args.domain),
-                #s3pypi_cf.Parameter('ReadS3PyPiBucketPolicy', read_bucket_policy),
                 Parameter('S3PyPiBucketName', bucket_name)
             ),
             capabilities=('CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND'),
@@ -142,16 +127,12 @@ def main() -> None:
             waiter_delay=30,
             waiter_max_attempts=180
         )
-        cname_record_value = distr_outputs.get('CNAMERecordValue')
-        print(textwrap.dedent(f"""
-          S3 PyPi infrastructure created: 
-            S3 Bucket: {bucket_name}
-            Publish Packages Policy: {publish_packages_policy}
-            Manage PyPi Users Policy: {manage_users_policy}
-            Read PyPi Bucket Policy: {read_bucket_policy}
-            SAM deployment output: {sam_outputs}
-            Distribution output: {distr_outputs}
-            """))
+        results = {
+            'BucketAndPolicies': bucket_and_policies,
+            'AuthLambda': sam_outputs,
+            'CloudFront': distr_outputs
+        }
+        print("S3 PyPi infrastructure created:", textwrap.indent(json.dumps(results, indent=2), '  '), sep='\n')
     except Exception as e:
         print('error: %s' % e)
         _log.fatal('application terminated due to an exception', exc_info=e)
