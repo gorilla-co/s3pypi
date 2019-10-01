@@ -6,6 +6,10 @@ authors = [
     "Matteo De Wint <matteo@novemberfive.co>",
     "Ruben Van den Bossche <ruben@novemberfive.co>",
 ]
+license = "MIT"
+packages = [
+    { include = "s3pypi" }
+]
 
 [tool.poetry.scripts]
 s3pypi = "s3pypi.__main__:main"
