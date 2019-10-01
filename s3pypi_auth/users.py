@@ -30,13 +30,17 @@ class S3UserStore:
     are logged at warning level.
     """
 
-    user_entry_re: t.ClassVar[t.Pattern] = re.compile(r"^\s*(?P<username>\w[^:\s]*)\s*:\s*(?P<hash>\S+)\s*$")
+    user_entry_re: t.ClassVar[t.Pattern] = re.compile(
+        r"^\s*(?P<username>\w[^:\s]*)\s*:\s*(?P<hash>\S+)\s*$"
+    )
 
-    def __init__(self,
-                 bucket_name: str,
-                 key: str,
-                 refresh_period: float = 60.0,
-                 aws_session: boto3.Session = None) -> None:
+    def __init__(
+        self,
+        bucket_name: str,
+        key: str,
+        refresh_period: float = 60.0,
+        aws_session: boto3.Session = None,
+    ) -> None:
         """
         Initialize an S3 user store proxy object.
 
@@ -50,13 +54,13 @@ class S3UserStore:
 
         if aws_session is None:
             aws_session = boto3.session.Session()
-        self._s3 = aws_session.resource('s3')
+        self._s3 = aws_session.resource("s3")
         self._user_store_object = self._s3.Object(bucket_name, key)
         self.refresh_period = refresh_period
-        self._etag = ''
+        self._etag = ""
         self._hashed_credentials = None
         self._last_update = time.time() - 2 * self.refresh_period
-        self._pw_ctx = passlib.context.CryptContext(schemes=['pbkdf2_sha256'])
+        self._pw_ctx = passlib.context.CryptContext(schemes=["pbkdf2_sha256"])
 
     @property
     def refresh_required(self) -> bool:
@@ -80,13 +84,13 @@ class S3UserStore:
             try:
                 user_store_dict = self._user_store_object.get(IfNoneMatch=self._etag)
             except botocore.exceptions.ClientError as ex:
-                response_meta = ex.response.get('ResponseMetadata', {})
-                if response_meta.get('HTTPStatusCode') != 304:
+                response_meta = ex.response.get("ResponseMetadata", {})
+                if response_meta.get("HTTPStatusCode") != 304:
                     raise
             else:
                 if user_store_dict is not None:
-                    self._etag = user_store_dict.get('ETag', '')
-                    body_stream = user_store_dict.get('Body')
+                    self._etag = user_store_dict.get("ETag", "")
+                    body_stream = user_store_dict.get("Body")
                     self._hashed_credentials = dict(self._user_hash_pairs(body_stream))
 
             # outside the else block because we need to update the time stamp in case of a 304 response as well
@@ -95,7 +99,9 @@ class S3UserStore:
         return self._hashed_credentials
 
     @classmethod
-    def _user_hash_pairs(cls, body: t.Optional[botocore.response.StreamingBody]) -> t.Iterator[t.Tuple[str, str]]:
+    def _user_hash_pairs(
+        cls, body: t.Optional[botocore.response.StreamingBody]
+    ) -> t.Iterator[t.Tuple[str, str]]:
         """
         Parse the provided response body and yield all username / password hash pairs found therein.
 
@@ -105,13 +111,15 @@ class S3UserStore:
         if body is not None:
             try:
                 for line in body.iter_lines():
-                    line = line.decode('utf-8').strip()
-                    if not line or line.startswith('#'):
+                    line = line.decode("utf-8").strip()
+                    if not line or line.startswith("#"):
                         continue
                     entry_match = cls.user_entry_re.fullmatch(line)
                     if entry_match:
                         username, pw_hash = entry_match.groups()
-                        yield passlib.utils.saslprep(username, param='username'), pw_hash
+                        yield passlib.utils.saslprep(
+                            username, param="username"
+                        ), pw_hash
                     else:
                         _log.warning(f'ignored ill-formatted user store entry "{line}"')
             finally:
@@ -133,12 +141,12 @@ class S3UserStore:
             if not hashed_creds:
                 return False  # user store is empty or inaccessible
         except Exception as ex:
-            _log.error('cannot access user store data', exc_info=ex)
+            _log.error("cannot access user store data", exc_info=ex)
             return False
 
         try:
-            normalized_username = passlib.utils.saslprep(username, param='username')
-            normalized_secret =  passlib.utils.saslprep(secret, param='secret')
+            normalized_username = passlib.utils.saslprep(username, param="username")
+            normalized_secret = passlib.utils.saslprep(secret, param="secret")
             user_pwdata = self._hashed_credentials.get(normalized_username)
             if user_pwdata:
                 return self._pw_ctx.verify(normalized_secret, user_pwdata)
@@ -146,5 +154,5 @@ class S3UserStore:
                 # avoid trivial timing attack to learn registered user names
                 return self._pw_ctx.dummy_verify()
         except Exception as ex:
-            _log.error('cannot verify provided password', exc_info=ex)
+            _log.error("cannot verify provided password", exc_info=ex)
             return False

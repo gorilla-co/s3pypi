@@ -1,2 +1,1 @@
-
-__prog__ = 's3pypi-admin'
+__prog__ = "s3pypi-admin"

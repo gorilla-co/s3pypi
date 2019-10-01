@@ -30,13 +30,15 @@ pytest-cov = "^2.7.1"
 
 [tool.black]
 exclude = '''
-      \.eggs
+      \.aws-sam
+    | \.eggs
     | \.git
     | \.mypy_cache
     | \.tox
     | \.venv
     | _build
     | build
+    | cdk
     | dist
 '''
 
