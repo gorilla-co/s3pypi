@@ -9,11 +9,6 @@ Parameters:
       The PyPi repository's public domain name (used for constructing resource and role names).
     Type: String
 
-#  ReadS3PyPiBucketPolicy:
-#    Description: >-
-#      Policy that grants read access to the complete PyPi S3 bucket.
-#    Type: String
-#
   S3PyPiBucketName:
     Description: >-
       Name of the S3 bucket that provides the PyPi repository's storage backend.
