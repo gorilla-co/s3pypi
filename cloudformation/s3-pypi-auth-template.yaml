@@ -86,9 +86,6 @@ Resources:
       Handler: app.lambda_handler
       MemorySize: 128
       Role: !GetAtt 'S3PyPiLambdaRole.Arn'
-#      Policies:
-#        - S3ReadPolicy:
-#            BucketName: !Ref S3PyPiBucketName
       Runtime: python3.7
       # see https://github.com/awslabs/serverless-application-model/blob/master/docs/safe_lambda_deployments.rst
       AutoPublishAlias: live
