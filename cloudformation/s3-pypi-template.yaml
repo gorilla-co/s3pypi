@@ -42,7 +42,7 @@ Resources:
             - - 'Origin Access Identity used by the PyPiCloudfrontDistribution to access objects in the bucket '
               - Ref: PyPiS3BucketName
 
-  PyPiS3BucketBucketPolicy:
+  PyPiS3CloudFrontBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket:
