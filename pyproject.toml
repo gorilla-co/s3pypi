@@ -14,10 +14,8 @@ packages = [
 [tool.poetry.scripts]
 s3pypi = "s3pypi.__main__:main"
 s3pypi-admin = "s3pypi.admin.__main__:main"
-s3pypi-infrastructure = "s3pypi.infrastructure.__main__:main"
 
 [tool.poetry.dependencies]
-basicauth = "^0.4.1"
 boto3 = "^1.9.211"
 Jinja2 = "^2.10.1"
 passlib = "^1.7.1"
@@ -42,7 +40,6 @@ exclude = '''
     | \.venv
     | _build
     | build
-    | cdk
     | dist
 '''
 

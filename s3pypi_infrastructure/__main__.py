@@ -8,7 +8,7 @@ import typing as t
 
 import boto3.session
 
-from ..infrastructure import __prog__
+from . import __prog__
 from .cloudformation import SAM, CloudFormationService, Parameter
 
 __author__ = "Christoph Ludwig"

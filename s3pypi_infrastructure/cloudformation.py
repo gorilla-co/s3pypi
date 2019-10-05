@@ -17,10 +17,22 @@ import botocore.waiter
 
 _log = logging.getLogger(__name__)
 
-# TODO: move templates as data files into the package and access them using pkg_resources
-_PROJECT_ROOT: pathlib.Path = pathlib.Path(__file__).parents[
-    len(__package__.split("."))
-]
+
+def _project_root() -> pathlib.Path:
+    """
+    Determine the project root directory.
+
+    The implementation assumes this module is part of a package and the top-level package directory
+    is a direct child-directory of the project root.
+
+    :return: the project root directory path
+    """
+    subpackage_level = len(__package__.split("."))
+    parent_directories = pathlib.Path(__file__).parents
+    return parent_directories[subpackage_level]
+
+
+_PROJECT_ROOT: pathlib.Path = _project_root()
 _TEMPLATE_SOURCE_FOLDER: pathlib.Path = _PROJECT_ROOT / "cloudformation"
 _PACKAGED_TEMPLATES_FOLDER: pathlib.Path = _PROJECT_ROOT / "packaged_templates"
 
