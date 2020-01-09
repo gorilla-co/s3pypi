@@ -118,6 +118,7 @@ class Index(object):
 
     def __init__(self, packages):
         self.packages = set(packages)
+        self.existing_files = {}
 
     @staticmethod
     def parse(html):
@@ -133,12 +134,17 @@ class Index(object):
         return Index(Package(name, files) for name, files in filenames.items())
 
     def to_html(self):
+        for package in filter(lambda p: p in self.existing_files, self.packages):
+            package.files.update(self.existing_files[package])
         return self.template.render({"packages": self.packages})
 
     def add_package(self, package, force=False):
-        if force:
+        exists = list(filter(lambda p: p.version == package.version, self.packages))
+        if exists and force:
+            existing = exists[0]
+            self.existing_files[package] = existing.files
             self.packages.discard(package)
-        elif any(p.version == package.version for p in self.packages):
+        elif exists:
             raise S3PyPiError(
                 "%s already exists! You should use a different version (use --force to override)."
                 % package
