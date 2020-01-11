@@ -48,7 +48,9 @@ def test_add_package_force():
 
     index = Index([pkg1])
     index.add_package(pkg2, force=True)
-    assert index.packages == {pkg2}
+
+    assert len(index.packages) == 1
+    assert next(iter(index.packages)).files == {"foo", "bar"}
 
 
 def test_directory_normalize_package_name():

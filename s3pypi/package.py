@@ -136,9 +136,13 @@ class Index(object):
         return self.template.render({"packages": self.packages})
 
     def add_package(self, package, force=False):
-        if force:
-            self.packages.discard(package)
-        elif any(p.version == package.version for p in self.packages):
+        existing = next(
+            (p for p in self.packages if p.version == package.version), None
+        )
+        if existing and force:
+            self.packages.discard(existing)
+            package = Package(str(package), existing.files | package.files)
+        elif existing:
             raise S3PyPiError(
                 "%s already exists! You should use a different version (use --force to override)."
                 % package
