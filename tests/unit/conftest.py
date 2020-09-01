@@ -14,11 +14,6 @@ def secret():
     )
 
 
-@pytest.fixture(scope="function")
-def private():
-    return True
-
-
 @pytest.fixture(
     scope="function",
     params=["helloworld-0.1", "s3pypi-0.1.3", "distribution_costs-0.1.0"],

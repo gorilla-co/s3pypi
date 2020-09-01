@@ -14,8 +14,9 @@ log = logging.getLogger()
 
 def create_and_upload_package(args):
     package = Package.create(args.wheel, args.sdist, args.dist_path)
+
     storage = S3Storage(
-        args.bucket, args.secret, args.region, args.bare, args.private, args.profile
+        args.bucket, args.secret, args.region, args.bare, args.acl, args.profile
     )
 
     index = storage.get_index(package)
@@ -44,11 +45,24 @@ def parse_args(args):
     p.add_argument(
         "--bare", action="store_true", help="Store index as bare package name"
     )
-    p.add_argument(
-        "--private", action="store_true", help="Store S3 Keys as private objects"
+
+    acl_group = p.add_mutually_exclusive_group()
+
+    acl_group.add_argument(
+        "--private",
+        action="store_const",
+        const="private",
+        default="public-read",
+        dest="acl",
+        help="Store S3 Keys as private objects",
     )
+    acl_group.add_argument(
+        "--acl", default="public-read", help="ACL to use for S3 objects"
+    )
+
     p.add_argument("--verbose", action="store_true", help="Turn on verbose output.")
     p.add_argument("--version", action="version", version=__version__)
+
     return p.parse_args(args)
 
 

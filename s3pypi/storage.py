@@ -13,7 +13,13 @@ class S3Storage(object):
     """Abstraction for storing package archives and index files in an S3 bucket."""
 
     def __init__(
-        self, bucket, secret=None, region=None, bare=False, private=False, profile=None
+        self,
+        bucket,
+        secret=None,
+        region=None,
+        bare=False,
+        acl="public-read",
+        profile=None,
     ):
         if profile:
             boto3.setup_default_session(profile_name=profile)
@@ -21,7 +27,7 @@ class S3Storage(object):
         self.bucket = bucket
         self.secret = secret
         self.index = "" if bare else "index.html"
-        self.acl = "private" if private else "public-read"
+        self.acl = acl
 
     def _object(self, package, filename):
         path = "%s/%s" % (package.directory, filename)
