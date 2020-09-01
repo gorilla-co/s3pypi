@@ -34,11 +34,11 @@ aws cloudformation create-stack --stack-name STACK_NAME \
 
 ### Distributing packages
 
-You can now use ``s3pypi`` to create Python packages and upload them to your S3 bucket. To hide packages from the public, you can use the ``--private`` option to prevent the packages from being accessible directly via the S3 bucket (they will only be accessible via Cloudfront and you can use WAF rules to protect them), or alternatively you can specify a secret subdirectory using the ``--secret`` option:
+You can now use ``s3pypi`` to create Python packages and upload them to your S3 bucket. To hide packages from the public, you can use the ``--private`` option to prevent the packages from being accessible directly via the S3 bucket (they will only be accessible via Cloudfront and you can use WAF rules to protect them). If switching between private and public is not flexible enough, you can use the ``--acl`` option to directly specify the ACL. Alternatively, you can specify a secret subdirectory using the ``--secret`` option:
 
 ```bash
 cd /path/to/your-project/
-s3pypi --bucket mybucket [--private] [--secret SECRET]
+s3pypi --bucket mybucket [--private | --acl ACL] [--secret SECRET]
 ```
 
 
