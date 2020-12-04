@@ -14,7 +14,6 @@ s3pypi = "s3pypi.__main__:main"
 boto3 = "^1.9.211"
 Jinja2 = "^2.10.1"
 python = "~2.7 || ^3.5"
-wheel = "^0.33.6"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^19.3b0", allow-prereleases = true, python = "^3.6"}
