@@ -52,7 +52,7 @@ def aws_credentials():
 @pytest.fixture
 def s3_bucket(aws_credentials):
     with mock_s3():
-        conn = boto3.resource("s3")
+        conn = boto3.resource("s3", region_name="us-east-1")
         bucket = conn.Bucket("s3pypi-test")
         bucket.create()
         yield bucket
