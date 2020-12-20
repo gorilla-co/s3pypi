@@ -73,8 +73,6 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
-  default_root_object = "index.html"
-
   custom_error_response {
     error_code = 403
     #response_code         = 404
@@ -101,6 +99,11 @@ resource "aws_cloudfront_distribution" "cdn" {
     default_ttl = 0
 
     compress = true
+
+    lambda_function_association {
+      event_type = "viewer-request"
+      lambda_arn = aws_lambda_function.basic_auth.qualified_arn
+    }
   }
 
   restrictions {
@@ -145,4 +148,75 @@ data "aws_iam_policy_document" "s3_policy" {
       identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
     }
   }
+}
+
+data "archive_file" "basic_auth" {
+  type        = "zip"
+  source_file = "${path.root}/../basic_auth/handler.py"
+  output_path = "${path.root}/../build/basic_auth.zip"
+}
+
+resource "aws_lambda_function" "basic_auth" {
+  provider = aws.us_east_1
+
+  function_name = "s3pypi-basic-auth-${replace(var.domain, ".", "-")}"
+
+  runtime = "python3.8"
+  timeout = 5
+  publish = true
+
+  filename         = data.archive_file.basic_auth.output_path
+  source_code_hash = data.archive_file.basic_auth.output_base64sha256
+  handler          = "handler.handle"
+
+  role = aws_iam_role.basic_auth.arn
+}
+
+resource "aws_iam_role" "basic_auth" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": [
+          "lambda.amazonaws.com",
+          "edgelambda.amazonaws.com"
+        ]
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "basic_auth" {
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ssm:GetParameter",
+      "Resource": "arn:aws:ssm:*:*:parameter/s3pypi/${var.domain}/users/*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "basic_auth" {
+  role       = aws_iam_role.basic_auth.name
+  policy_arn = aws_iam_policy.basic_auth.arn
 }

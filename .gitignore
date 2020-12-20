@@ -78,4 +78,6 @@ target/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.backup
+*.tfstate.*.backup
+*.tfstate.lock.info
 *.auto.tfvars
