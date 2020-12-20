@@ -69,5 +69,13 @@ target/
 # MyPY
 .mypy_cache/
 
-# VSCode
+# Personal
+.envrc
 .vscode/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.auto.tfvars
