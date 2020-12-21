@@ -336,7 +336,7 @@ xdg_home = ["appdirs (>=1.4.0)"]
 name = "jinja2"
 version = "2.11.2"
 description = "A very fast and expressive template engine."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -430,7 +430,7 @@ six = "*"
 name = "markupsafe"
 version = "1.1.1"
 description = "Safely add untrusted strings to HTML/XML markup."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
 
@@ -903,7 +903,7 @@ testing = ["pathlib2", "unittest2", "jaraco.itertools", "func-timeout"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.5"
-content-hash = "a57f2d2cdd3f032032954032b52915574f4f4641c5c4af7bb348e1d410a2f1d7"
+content-hash = "484fabc2102aa0de53f1905be92e6b6997d10ce341fdad4e88d2c748e74022f4"
 
 [metadata.files]
 appdirs = [
