@@ -52,34 +52,31 @@ Manager]. If your certificate is a wildcard certificate, add
 
 ### Distributing packages
 
-You can now use `s3pypi` to upload Python packages to your S3 bucket. To hide
-packages from the public, you can use the `--private` option to prevent the
-packages from being accessible directly via the S3 bucket (they will only be
-accessible via CloudFront and you can use WAF rules to protect them). If
-switching between private and public is not flexible enough, you can use the
-`--acl` option to directly specify the ACL. Alternatively, you can specify a
-secret subdirectory using the `--secret` option:
+You can now use `s3pypi` to upload packages to S3:
 
 ```bash
 cd /path/to/your-project/
-s3pypi --bucket example-bucket [--private | --acl ACL] [--secret SECRET]
+python setup.py sdist bdist_wheel
+
+s3pypi dist/* --bucket example-bucket [--prefix PREFIX] [--acl ACL]
 ```
 
 
 ### Installing packages
 
 Install your packages using `pip` by pointing the `--extra-index-url` to your
-CloudFront distribution (optionally followed by a secret subdirectory):
+CloudFront domain. If you used `--prefix` while uploading, then add the prefix
+here as well:
 
 ```bash
-pip install your-project --extra-index-url https://pypi.example.com/SECRET/
+pip install your-project --extra-index-url https://pypi.example.com/PREFIX/
 ```
 
 Alternatively, you can configure the index URL in `~/.pip/pip.conf`:
 
 ```
 [global]
-extra-index-url = https://pypi.example.com/SECRET/
+extra-index-url = https://pypi.example.com/PREFIX/
 ```
 
 

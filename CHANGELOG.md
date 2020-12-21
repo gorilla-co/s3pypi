@@ -14,8 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Dropped Python 2 support.
+- Python 2 support.
+- Creation of distributions. Only existing distribution files can be uploaded.
+- The `--private` option. The default ACL is now `private`, and you can pass a
+  different one using the `--acl` option.
 - CloudFormation templates (replaced by Terraform configuration).
+- Jinja2 dependency.
 
 
 ## 0.11.0 - 2020-09-01
