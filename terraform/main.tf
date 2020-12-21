@@ -24,8 +24,8 @@ variable "domain" {
 
 variable "use_wildcard_certificate" {
   type        = bool
-  default     = true
-  description = "Use a wildcard certificate (*.domain.com)"
+  default     = false
+  description = "Use a wildcard certificate (*.example.com)"
 }
 
 provider "aws" {
