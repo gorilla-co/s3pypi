@@ -72,6 +72,37 @@ are hashed with a random salt, and stored as JSON objects:
 }
 ```
 
+#### Terraform module
+
+The Terraform configuration can also be included in your own project as a
+module:
+
+```terraform
+provider "aws" {
+  region = "eu-west-1"
+}
+
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
+
+module "s3pypi" {
+  source = "github.com/novemberfiveco/s3pypi//terraform/modules/s3pypi"
+
+  bucket = "example-bucket"
+  domain = "pypi.example.com"
+
+  use_wildcard_certificate = true
+  enable_basic_auth        = true
+
+  providers = {
+    aws.us_east_1 = aws.us_east_1
+  }
+}
+```
+
+
 ## Usage
 
 ### Distributing packages
