@@ -60,13 +60,20 @@ class Index:
             (p for p in self.packages if p.version == package.version), None
         )
         if existing:
-            if force:
-                existing.files.update(package.files)
-            else:
+            a = {f.name for f in existing.files}
+            b = {f.name for f in package.files}
+            conflicts = a.intersection(b)
+
+            if conflicts and not force:
                 raise S3PyPiError(
-                    f"{package} already exists in the index! Use a different version, "
-                    "or use --force to add files to the existing package."
+                    f"{package} already exists in the index: {', '.join(sorted(conflicts))}\n"
+                    "Use a different version, or use --force to overwrite existing files."
                 )
+
+            if conflicts:
+                drop = {f for f in existing.files if f.name in conflicts}
+                existing.files.difference_update(drop)
+            existing.files.update(package.files)
         else:
             self.packages.add(package)
 
