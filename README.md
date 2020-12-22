@@ -12,8 +12,8 @@ An extended tutorial on this tool can be found
 
 Install s3pypi using pip:
 
-```bash
-pip install s3pypi
+```console
+$ pip install s3pypi
 ```
 
 
@@ -24,12 +24,12 @@ packages, and a CloudFront distribution for serving files over HTTPS. Both of
 these can be created using the [Terraform](https://www.terraform.io/)
 configuration provided in the `terraform/` directory:
 
-```bash
-git clone https://github.com/novemberfiveco/s3pypi.git
-cd s3pypi/terraform/
+```console
+$ git clone https://github.com/novemberfiveco/s3pypi.git
+$ cd s3pypi/terraform/
 
-terraform init
-terraform apply
+$ terraform init
+$ terraform apply
 ```
 
 You will be asked to enter your desired AWS region, S3 bucket name, and domain
@@ -42,11 +42,34 @@ bucket = "example-bucket"
 domain = "pypi.example.com"
 ```
 
+#### DNS and HTTPS
+
 The Terraform configuration assumes that a [Route 53 hosted zone] exists for
 your domain, with a matching (wildcard) certificate in [AWS Certificate
 Manager]. If your certificate is a wildcard certificate, add
 `use_wildcard_certificate = true` to `config.auto.tfvars`.
 
+#### Basic authentication
+
+To enable basic authentication, add `enable_basic_auth = true` to
+`config.auto.tfvars`. This will attach a Lambda@Edge function to your CloudFront
+distribution that reads user passwords from AWS Systems Manager Parameter Store.
+Users and passwords can be configured using the `put_user.py` script:
+
+```console
+$ basic_auth/put_user.py pypi.example.com alice
+Password:
+```
+
+This creates a parameter named `/s3pypi/pypi.example.com/users/alice`. Passwords
+are hashed with a random salt, and stored as JSON objects:
+
+```json
+{
+  "password_hash": "7364151acc6229ec1468f54986a7614a8b215c26",
+  "password_salt": "RRoCSRzvYJ1xRra2TWzhqS70wn84Sb_ElKxpl49o3Y0"
+}
+```
 
 ## Usage
 
@@ -54,11 +77,11 @@ Manager]. If your certificate is a wildcard certificate, add
 
 You can now use `s3pypi` to upload packages to S3:
 
-```bash
-cd /path/to/your-project/
-python setup.py sdist bdist_wheel
+```console
+$ cd /path/to/your-project/
+$ python setup.py sdist bdist_wheel
 
-s3pypi dist/* --bucket example-bucket [--prefix PREFIX] [--acl ACL]
+$ s3pypi dist/* --bucket example-bucket [--prefix PREFIX] [--acl ACL]
 ```
 
 
@@ -68,8 +91,8 @@ Install your packages using `pip` by pointing the `--extra-index-url` to your
 CloudFront domain. If you used `--prefix` while uploading, then add the prefix
 here as well:
 
-```bash
-pip install your-project --extra-index-url https://pypi.example.com/PREFIX/
+```console
+$ pip install your-project --extra-index-url https://pypi.example.com/PREFIX/
 ```
 
 Alternatively, you can configure the index URL in `~/.pip/pip.conf`:

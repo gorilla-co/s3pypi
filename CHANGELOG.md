@@ -10,7 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Terraform configuration for S3 and CloudFront.
+- Terraform configuration for S3 and CloudFront, including optional basic
+  authentication using Lambda@Edge and AWS Systems Manager Parameter Store.
+
+### Changed
+
+- CLI arguments have been overhauled. See `s3pypi --help` for details.
 
 ### Removed
 
