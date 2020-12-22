@@ -28,6 +28,12 @@ variable "use_wildcard_certificate" {
   description = "Use a wildcard certificate (*.example.com)"
 }
 
+variable "enable_basic_auth" {
+  type        = bool
+  default     = false
+  description = "Enable basic authentication using Lambda@Edge"
+}
+
 provider "aws" {
   region = var.region
 }
@@ -100,9 +106,13 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     compress = true
 
-    lambda_function_association {
-      event_type = "viewer-request"
-      lambda_arn = aws_lambda_function.basic_auth.qualified_arn
+    dynamic "lambda_function_association" {
+      for_each = aws_lambda_function.basic_auth
+      iterator = func
+      content {
+        event_type = "viewer-request"
+        lambda_arn = func.value.qualified_arn
+      }
     }
   }
 
@@ -151,12 +161,15 @@ data "aws_iam_policy_document" "s3_policy" {
 }
 
 data "archive_file" "basic_auth" {
+  count = var.enable_basic_auth ? 1 : 0
+
   type        = "zip"
   source_file = "${path.root}/../basic_auth/handler.py"
   output_path = "${path.root}/../build/basic_auth.zip"
 }
 
 resource "aws_lambda_function" "basic_auth" {
+  count    = var.enable_basic_auth ? 1 : 0
   provider = aws.us_east_1
 
   function_name = "s3pypi-basic-auth-${replace(var.domain, ".", "-")}"
@@ -165,14 +178,16 @@ resource "aws_lambda_function" "basic_auth" {
   timeout = 5
   publish = true
 
-  filename         = data.archive_file.basic_auth.output_path
-  source_code_hash = data.archive_file.basic_auth.output_base64sha256
+  filename         = data.archive_file.basic_auth[0].output_path
+  source_code_hash = data.archive_file.basic_auth[0].output_base64sha256
   handler          = "handler.handle"
 
-  role = aws_iam_role.basic_auth.arn
+  role = aws_iam_role.basic_auth[0].arn
 }
 
 resource "aws_iam_role" "basic_auth" {
+  count = var.enable_basic_auth ? 1 : 0
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -193,6 +208,8 @@ EOF
 }
 
 resource "aws_iam_policy" "basic_auth" {
+  count = var.enable_basic_auth ? 1 : 0
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -217,6 +234,8 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "basic_auth" {
-  role       = aws_iam_role.basic_auth.name
-  policy_arn = aws_iam_policy.basic_auth.arn
+  count = var.enable_basic_auth ? 1 : 0
+
+  role       = aws_iam_role.basic_auth[0].name
+  policy_arn = aws_iam_policy.basic_auth[0].arn
 }

@@ -14,18 +14,19 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("domain")
     parser.add_argument("username")
+    parser.add_argument("--salt-nbytes", type=int, default=32)
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
 
     password = getpass.getpass()
-    salt = secrets.token_urlsafe(32)
+    salt = secrets.token_urlsafe(args.salt_nbytes)
 
     user = User(
         username=args.username,
         password_hash=hash_password(password, salt),
         password_salt=salt,
     )
-    put_user(args.domain, user)
+    put_user(args.domain, user, args.overwrite)
 
 
 def put_user(domain: str, user: User, overwrite: bool = False):
