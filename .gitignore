@@ -81,3 +81,4 @@ target/
 *.tfstate.*.backup
 *.tfstate.lock.info
 *.auto.tfvars
+handler.zip
