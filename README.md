@@ -52,9 +52,10 @@ Manager]. If your certificate is a wildcard certificate, add
 #### Basic authentication
 
 To enable basic authentication, add `enable_basic_auth = true` to
-`config.auto.tfvars`. This will attach a Lambda@Edge function to your CloudFront
-distribution that reads user passwords from AWS Systems Manager Parameter Store.
-Users and passwords can be configured using the `put_user.py` script:
+`config.auto.tfvars`. This will attach a [Lambda@Edge] function to your
+CloudFront distribution that reads user passwords from [AWS Systems Manager
+Parameter Store]. Users and passwords can be configured using the `put_user.py`
+script:
 
 ```console
 $ basic_auth/put_user.py pypi.example.com alice
@@ -127,3 +128,5 @@ Licensed under the [MIT](LICENSE) License.
 
 [Route 53 hosted zone]: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/AboutHZWorkingWith.html
 [AWS Certificate Manager]: https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html
+[Lambda@Edge]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-the-edge.html
+[AWS Systems Manager Parameter Store]: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html
