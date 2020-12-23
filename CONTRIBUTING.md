@@ -21,9 +21,9 @@ If the bug you encountered has not been reported yet, create a new Issue for it
 and make sure to label it as a 'bug'. To allow us to help you as efficiently as
 possible, always try to include the following:
 
-- What version of s3pypi are you using?
-- What operating system or environment did the bug occur at.
-- What did go wrong?
+- Which version of s3pypi are you using?
+- Which operating system or environment did the bug occur on?
+- What went wrong?
 - What did you expect to happen?
 - Detailed steps to reproduce.
 
@@ -76,7 +76,7 @@ The workflow for creating a pull request:
 7. `commit` your changes in logical chunks.
 8. `push` your branch to your fork on GitHub.
 9. Create a pull request from your feature branch to the original repository's
-   `develop` branch.
+   `master` branch.
 
 The maintainer of this repository monitors pull requests on a regular basis and
 will respond as soon as possible. The smaller individual pull requests are, the
