@@ -10,13 +10,17 @@ import boto3
 from handler import User, hash_password, region
 
 
+def get_arg_parser():
+    p = argparse.ArgumentParser()
+    p.add_argument("domain")
+    p.add_argument("username")
+    p.add_argument("--salt-nbytes", type=int, default=32)
+    p.add_argument("--overwrite", action="store_true")
+    return p
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("domain")
-    parser.add_argument("username")
-    parser.add_argument("--salt-nbytes", type=int, default=32)
-    parser.add_argument("--overwrite", action="store_true")
-    args = parser.parse_args()
+    args = get_arg_parser().parse_args()
 
     password = getpass.getpass()
     salt = secrets.token_urlsafe(args.salt_nbytes)

@@ -1,12 +1,11 @@
-import logging
+import re
+from pathlib import Path
 from typing import Optional
 
 import boto3
 import botocore
 
-from s3pypi.index import Index, Package
-
-log = logging.getLogger()
+from s3pypi.index import Index
 
 
 class S3Storage:
@@ -26,34 +25,35 @@ class S3Storage:
         self.acl = acl or "private"
         self.index_name = "index.html" if unsafe_s3_website else ""
 
-    def _object(self, package: Package, filename: str):
-        parts = [package.directory, filename]
+    @staticmethod
+    def directory(package_name: str) -> str:
+        return re.sub(r"[-_.]+", "-", package_name.lower())
+
+    def _object(self, directory: str, filename: str):
+        parts = [directory, filename]
         if self.prefix:
             parts.insert(0, self.prefix)
         return self.s3.Object(self.bucket, "/".join(parts))
 
-    def get_index(self, package: Package):
+    def get_index(self, directory: str) -> Index:
         try:
-            html = self._object(package, self.index_name).get()["Body"].read()
+            html = self._object(directory, self.index_name).get()["Body"].read()
         except botocore.exceptions.ClientError:
             return Index()
         return Index.parse(html.decode())
 
-    def put_index(self, index: Index):
-        package = next(iter(index.packages))
-        self._object(package, self.index_name).put(
+    def put_index(self, directory: str, index: Index):
+        self._object(directory, self.index_name).put(
             Body=index.to_html(),
             ContentType="text/html",
             CacheControl="public, must-revalidate, proxy-revalidate, max-age=0",
             ACL=self.acl,
         )
 
-    def put_package(self, package: Package):
-        for path in package.files:
-            log.debug("Uploading: %s", path)
-            with open(path, mode="rb") as f:
-                self._object(package, path.name).put(
-                    Body=f,
-                    ContentType="application/x-gzip",
-                    ACL=self.acl,
-                )
+    def put_distribution(self, directory: str, local_path: Path):
+        with open(local_path, mode="rb") as f:
+            self._object(directory, local_path.name).put(
+                Body=f,
+                ContentType="application/x-gzip",
+                ACL=self.acl,
+            )
