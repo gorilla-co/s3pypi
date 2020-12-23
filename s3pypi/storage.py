@@ -15,14 +15,18 @@ class S3Storage:
         region: Optional[str] = None,
         prefix: Optional[str] = None,
         acl: Optional[str] = None,
+        s3_put_args: Optional[dict] = None,
         unsafe_s3_website: bool = False,
     ):
         session = boto3.Session(profile_name=profile, region_name=region)
         self.s3 = session.resource("s3")
         self.bucket = bucket
         self.prefix = prefix
-        self.acl = acl or "private"
         self.index_name = "index.html" if unsafe_s3_website else ""
+        self.put_kwargs = dict(
+            ACL=acl or "private",
+            **(s3_put_args or {}),
+        )
 
     def _object(self, directory: str, filename: str):
         parts = [directory, filename]
@@ -42,7 +46,7 @@ class S3Storage:
             Body=index.to_html(),
             ContentType="text/html",
             CacheControl="public, must-revalidate, proxy-revalidate, max-age=0",
-            ACL=self.acl,
+            **self.put_kwargs,
         )
 
     def put_distribution(self, directory: str, local_path: Path):
@@ -50,5 +54,5 @@ class S3Storage:
             self._object(directory, local_path.name).put(
                 Body=f,
                 ContentType="application/x-gzip",
-                ACL=self.acl,
+                **self.put_kwargs,
             )

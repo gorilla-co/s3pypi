@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Existing resources created using the old CloudFormation templates can be
   [imported into Terraform](https://www.terraform.io/docs/import/index.html) and
   [removed from CloudFormation].
+- `--s3-put-args` option for passing extra arguments to S3 PutObject calls.
+  Example: `--s3-put-args='ServerSideEncryption=aws:kms,SSEKMSKeyId=1234...'`
 
 [removed from CloudFormation]: https://aws.amazon.com/premiumsupport/knowledge-center/delete-cf-stack-retain-resources/
 

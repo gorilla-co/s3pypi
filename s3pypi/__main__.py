@@ -4,11 +4,16 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+from typing import Dict
 
 from s3pypi import __prog__, __version__, core
 
 logging.basicConfig()
 log = logging.getLogger(__prog__)
+
+
+def string_dict(text: str) -> Dict[str, str]:
+    return dict(tuple(item.strip().split("=", 1)) for item in text.split(","))  # type: ignore
 
 
 def get_arg_parser():
@@ -24,6 +29,14 @@ def get_arg_parser():
     p.add_argument("--region", help="Optional AWS region to target.")
     p.add_argument("--prefix", help="Optional prefix to use for S3 object names.")
     p.add_argument("--acl", help="Optional canned ACL to use for S3 objects.")
+    p.add_argument(
+        "--s3-put-args",
+        type=string_dict,
+        help=(
+            "Optional extra arguments to S3 PutObject calls. Example: "
+            "'ServerSideEncryption=aws:kms,SSEKMSKeyId=1234...'"
+        ),
+    )
     p.add_argument(
         "--unsafe-s3-website",
         action="store_true",
