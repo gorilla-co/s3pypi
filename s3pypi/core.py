@@ -1,10 +1,10 @@
+import email
 import logging
-import re
 from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterator, List, Tuple
+from typing import Iterator, List
 from zipfile import ZipFile
 
 from s3pypi import __prog__
@@ -49,18 +49,21 @@ def parse_distributions(paths: List[Path]) -> Iterator[Distribution]:
         if path.name.endswith(".tar.gz"):
             name, version = path.name[:-7].rsplit("-", 1)
         elif path.suffix == ".whl":
-            metadata = extract_wheel_metadata(path)
-            name, version = find_wheel_name_and_version(metadata)
+            meta = extract_wheel_metadata(path)
+            name, version = meta["Name"], meta["Version"]
         else:
             raise S3PyPiError(f"Unknown file type: {path}")
 
         yield Distribution(name, version, path)
 
 
-def extract_wheel_metadata(path: Path) -> str:
+PackageMetadata = email.message.Message
+
+
+def extract_wheel_metadata(path: Path) -> PackageMetadata:
     with ZipFile(path, "r") as whl:
         try:
-            return next(
+            text = next(
                 whl.open(fname).read().decode()
                 for fname in whl.namelist()
                 if fname.endswith("METADATA")
@@ -68,12 +71,4 @@ def extract_wheel_metadata(path: Path) -> str:
         except StopIteration:
             raise S3PyPiError(f"No wheel metadata found in {path}") from None
 
-
-def find_wheel_name_and_version(metadata: str) -> Tuple[str, str]:
-    name = re.search(r"^Name: (.*)", metadata, flags=re.MULTILINE)
-    version = re.search(r"^Version: (.*)", metadata, flags=re.MULTILINE)
-
-    if not (name and version):
-        raise S3PyPiError(f"Wheel name and version not found in metadata: {metadata}")
-
-    return name[1], version[1]
+    return email.message_from_string(text)
