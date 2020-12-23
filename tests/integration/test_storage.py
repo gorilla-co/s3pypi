@@ -1,19 +1,5 @@
-import pytest
-
 from s3pypi.index import Index
 from s3pypi.storage import S3Storage
-
-
-@pytest.mark.parametrize(
-    "package_name, directory",
-    [
-        ("company.test", "company-test"),
-        ("company---test.1", "company-test-1"),
-        ("company___test.2", "company-test-2"),
-    ],
-)
-def test_directory_normalize_package_name(package_name, directory):
-    assert S3Storage.directory(package_name) == directory
 
 
 def test_index_storage_roundtrip(s3_bucket):

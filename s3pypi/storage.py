@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 from typing import Optional
 
@@ -24,10 +23,6 @@ class S3Storage:
         self.prefix = prefix
         self.acl = acl or "private"
         self.index_name = "index.html" if unsafe_s3_website else ""
-
-    @staticmethod
-    def directory(package_name: str) -> str:
-        return re.sub(r"[-_.]+", "-", package_name.lower())
 
     def _object(self, directory: str, filename: str):
         parts = [directory, filename]
