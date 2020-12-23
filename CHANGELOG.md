@@ -13,7 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Terraform configuration for S3 and CloudFront, including optional **basic
   authentication** using Lambda@Edge and AWS Systems Manager Parameter Store.
   Existing resources created using the old CloudFormation templates can be
-  [imported into Terraform](https://www.terraform.io/docs/import/index.html).
+  [imported into Terraform](https://www.terraform.io/docs/import/index.html) and
+  [removed from CloudFormation].
+
+[removed from CloudFormation]: https://aws.amazon.com/premiumsupport/knowledge-center/delete-cf-stack-retain-resources/
 
 ### Changed
 
