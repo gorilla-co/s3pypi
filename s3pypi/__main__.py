@@ -8,10 +8,10 @@ from pathlib import Path
 from s3pypi import __prog__, __version__, core
 
 logging.basicConfig()
-log = logging.getLogger()
+log = logging.getLogger(__prog__)
 
 
-def parse_args(args):
+def get_arg_parser():
     p = argparse.ArgumentParser(prog=__prog__)
     p.add_argument(
         "dist",
@@ -34,21 +34,20 @@ def parse_args(args):
             "It's recommended to instead use a private S3 bucket with a CloudFront Origin Access Identity."
         ),
     )
-    p.add_argument("--force", action="store_true", help="Overwrite existing packages.")
-    p.add_argument("--verbose", action="store_true", help="Enable verbose output.")
-    p.add_argument("--version", action="version", version=__version__)
-    return p.parse_args(args)
+    p.add_argument("-f", "--force", action="store_true", help="Overwrite files.")
+    p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
+    p.add_argument("-V", "--version", action="version", version=__version__)
+    return p
 
 
 def main(*args):
-    kwargs = vars(parse_args(args or sys.argv[1:]))
+    kwargs = vars(get_arg_parser().parse_args(args or sys.argv[1:]))
     log.setLevel(logging.DEBUG if kwargs.pop("verbose") else logging.INFO)
 
     try:
         core.upload_packages(**kwargs)
     except core.S3PyPiError as e:
-        print("error: %s" % e)
-        sys.exit(1)
+        sys.exit(f"ERROR: {e}")
 
 
 if __name__ == "__main__":

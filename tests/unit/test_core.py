@@ -11,5 +11,6 @@ def wheel_metadata(request, data_dir):
 
 
 def test_find_name_from_wheel_metadata(wheel_metadata):
-    metadata, name_version = wheel_metadata
-    assert core.find_wheel_name_and_version(metadata) == name_version
+    metadata, expected_name_version = wheel_metadata
+    name, version = core.find_wheel_name_and_version(metadata)
+    assert name, version == expected_name_version

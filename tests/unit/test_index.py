@@ -1,66 +1,49 @@
-from pathlib import Path
-
 import pytest
 
-from s3pypi.exceptions import S3PyPiError
-from s3pypi.index import Index, Package
+from s3pypi.index import Index
 
-dist = Path("dist")
-foo = Path("foo")
-bar = Path("bar")
+
+@pytest.fixture(
+    scope="function",
+    params=[
+        (
+            "s3pypi",
+            {
+                f"s3pypi-{version}{suffix}"
+                for version in (
+                    "0",
+                    "0!0",
+                    "0+local",
+                    "0.0",
+                    "0.1.1",
+                    "0.1.2",
+                    "0.dev0",
+                    "0.post0",
+                    "0a0",
+                    "0rc0",
+                )
+                for suffix in (
+                    ".tar.gz",
+                    "-py2-none-any.whl",
+                )
+            },
+        )
+    ],
+)
+def index_html(request, data_dir):
+    index_name, filenames = request.param
+    with open(data_dir / "index" / f"{index_name}.html") as f:
+        html = f.read().strip()
+        yield html, filenames
 
 
 def test_parse_index(index_html):
-    html, expected_packages = index_html
-    assert Index.parse(html).packages == expected_packages
+    html, expected_filenames = index_html
+    index = Index.parse(html)
+    assert index.filenames == expected_filenames
 
 
 def test_render_index(index_html):
-    expected_html, packages = index_html
-    assert Index(packages).to_html() == expected_html
-
-
-def test_add_package():
-    pkg1 = Package("test", "0.0.1", {foo})
-    pkg2 = Package("test", "0.0.2", {bar})
-
-    index = Index({pkg1})
-    index.add_package(pkg2)
-
-    assert index.packages == {pkg1, pkg2}
-
-
-def test_add_package_existing_no_conflicts():
-    pkg1 = Package("test", "0.0.1", {foo})
-    pkg2 = Package("test", "0.0.1", {bar})
-
-    index = Index({pkg1})
-    index.add_package(pkg2)
-
-    assert len(index.packages) == 1
-    assert next(iter(index.packages)).files == {foo, bar}
-
-
-def test_add_package_existing_conflicts():
-    pkg1 = Package("test", "0.0.1", {foo})
-    pkg2 = Package("test", "0.0.1", {dist / foo, bar})
-
-    index = Index({pkg1})
-    with pytest.raises(S3PyPiError):
-        index.add_package(pkg2)
-
-
-def test_add_package_force():
-    pkg1 = Package("test", "0.0.1", {foo})
-    pkg2 = Package("test", "0.0.1", {dist / foo, bar})
-
-    index = Index({pkg1})
-    index.add_package(pkg2, force=True)
-
-    assert len(index.packages) == 1
-    assert next(iter(index.packages)).files == {dist / foo, bar}
-
-
-def test_directory_normalize_package_name():
-    pkg = Package("company.test", "0.0.1", {foo})
-    assert pkg.directory == "company-test"
+    expected_html, filenames = index_html
+    html = Index(filenames).to_html()
+    assert html == expected_html
