@@ -131,8 +131,8 @@ resource "aws_s3_bucket_policy" "s3_policy" {
 
 data "aws_iam_policy_document" "s3_policy" {
   statement {
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.pypi.arn}/*"]
+    actions   = ["s3:GetObject", "s3:ListBucket"]
+    resources = ["${aws_s3_bucket.pypi.arn}/*", aws_s3_bucket.pypi.arn]
 
     principals {
       type        = "AWS"
