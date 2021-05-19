@@ -10,8 +10,9 @@ from zipfile import ZipFile
 
 import boto3
 
-from s3pypi import __prog__, locking
+from s3pypi import __prog__
 from s3pypi.exceptions import S3PyPiError
+from s3pypi.locking import DummyLocker, DynamoDBLocker
 from s3pypi.storage import S3Storage
 
 log = logging.getLogger(__prog__)
@@ -41,12 +42,8 @@ def upload_packages(
 ):
     session = boto3.Session(profile_name=profile, region_name=region)
     storage = S3Storage(session, bucket, **kwargs)
-    lock = (
-        # TODO: Make table name customizable?
-        locking.DynamoDbLocker(session, table=bucket)
-        if lock_indexes
-        else locking.DummyLocker()
-    )
+    # TODO: Make table name customizable?
+    lock = DynamoDBLocker(session, table=bucket) if lock_indexes else DummyLocker()
 
     distributions = [parse_distribution(path) for path in dist]
     get_name = attrgetter("name")
