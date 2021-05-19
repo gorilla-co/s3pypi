@@ -5,10 +5,12 @@ from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from zipfile import ZipFile
 
-from s3pypi import __prog__
+import boto3
+
+from s3pypi import __prog__, locking
 from s3pypi.exceptions import S3PyPiError
 from s3pypi.storage import S3Storage
 
@@ -28,27 +30,51 @@ def normalize_package_name(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name.lower())
 
 
-def upload_packages(dist: List[Path], bucket: str, force: bool = False, **kwargs):
-    storage = S3Storage(bucket, **kwargs)
+def upload_packages(
+    dist: List[Path],
+    bucket: str,
+    force: bool = False,
+    lock_indexes: bool = False,
+    profile: Optional[str] = None,
+    region: Optional[str] = None,
+    **kwargs,
+):
+    session = boto3.Session(profile_name=profile, region_name=region)
+    storage = S3Storage(session, bucket, **kwargs)
+    lock = (
+        # TODO: Make table name customizable?
+        locking.DynamoDbLocker(session, table=bucket)
+        if lock_indexes
+        else locking.DummyLocker()
+    )
 
     distributions = [parse_distribution(path) for path in dist]
     get_name = attrgetter("name")
 
     for name, group in groupby(sorted(distributions, key=get_name), get_name):
         directory = normalize_package_name(name)
-        index = storage.get_index(directory)
+        with lock(directory):
+            index = storage.get_index(directory)
 
-        for distr in group:
-            filename = distr.local_path.name
+            for distr in group:
+                filename = distr.local_path.name
 
-            if not force and filename in index.filenames:
-                log.warning("%s already exists! (use --force to overwrite)", filename)
-            else:
-                log.info("Uploading %s", distr.local_path)
-                storage.put_distribution(directory, distr.local_path)
-                index.filenames.add(filename)
+                if not force and filename in index.filenames:
+                    log.warning(
+                        "%s already exists! (use --force to overwrite)", filename
+                    )
+                else:
+                    log.info("Uploading %s", distr.local_path)
+                    storage.put_distribution(directory, distr.local_path)
+                    index.filenames.add(filename)
 
-        storage.put_index(directory, index)
+            storage.put_index(directory, index)
+
+    root = storage.root
+    with lock(root):
+        index = storage.get_index(root)
+        # TODO: Update root index
+        storage.put_index(root, index)
 
 
 def parse_distribution(path: Path) -> Distribution:

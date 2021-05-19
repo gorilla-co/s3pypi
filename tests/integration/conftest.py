@@ -35,3 +35,8 @@ def s3_bucket(aws_credentials):
         bucket = conn.Bucket("s3pypi-test")
         bucket.create()
         yield bucket
+
+
+@pytest.fixture
+def boto3_session(s3_bucket):
+    return boto3.session.Session()

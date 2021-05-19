@@ -67,6 +67,8 @@ resource "aws_cloudfront_distribution" "cdn" {
     error_caching_min_ttl = 0
   }
 
+  default_root_object = "index.html"
+
   default_cache_behavior {
     target_origin_id       = "s3"
     viewer_protocol_policy = "redirect-to-https"

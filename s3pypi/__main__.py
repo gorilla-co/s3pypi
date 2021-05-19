@@ -47,6 +47,15 @@ def get_arg_parser():
             "It's recommended to instead use a private S3 bucket with a CloudFront Origin Access Identity."
         ),
     )
+    p.add_argument(
+        "-l",
+        "--lock-indexes",
+        action="store_true",
+        help=(
+            "Lock index objects in S3 using a DynamoDB table. "
+            "This ensures that concurrent invocations of s3pypi do not overwrite each other's changes."
+        ),
+    )
     p.add_argument("-f", "--force", action="store_true", help="Overwrite files.")
     p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     p.add_argument("-V", "--version", action="version", version=__version__)
