@@ -16,7 +16,7 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 ### Changed
 
-- Set the default root object to `index.html` in CloudFront.
+- Set CloudFront default root object to `index.html`.
 
 
 ## 1.0.0rc1 - 2021-05-19
