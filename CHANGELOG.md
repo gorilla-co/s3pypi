@@ -10,7 +10,8 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 ### Added
 
-- `--lock-indexes` option to lock index objects in S3 using a DynamoDB table.
+- Terraform config for an optional DynamoDB table used for distributed locking.
+- `--lock-indexes` option to lock index objects in S3 using said DynamoDB table.
 - `--put-root-index` option to write a root index that lists all package names.
 
 ### Changed

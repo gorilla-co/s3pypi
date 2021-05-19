@@ -43,8 +43,11 @@ def upload_packages(
 ):
     session = boto3.Session(profile_name=profile, region_name=region)
     storage = S3Storage(session, bucket, **kwargs)
-    # TODO: Make table name customizable?
-    lock = DynamoDBLocker(session, table=bucket) if lock_indexes else DummyLocker()
+    lock = (
+        DynamoDBLocker(session, table=f"{bucket}-locks")
+        if lock_indexes
+        else DummyLocker()
+    )
 
     distributions = [parse_distribution(path) for path in dist]
     get_name = attrgetter("name")

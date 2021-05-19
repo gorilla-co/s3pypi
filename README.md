@@ -49,6 +49,13 @@ your domain, with a matching (wildcard) certificate in [AWS Certificate
 Manager]. If your certificate is a wildcard certificate, add
 `use_wildcard_certificate = true` to `config.auto.tfvars`.
 
+#### Distributed locking with DynamoDB
+
+To ensure that concurrent invocations of `s3pypi` do not overwrite each other's
+changes, the objects in S3 can be locked via an optional DynamoDB table (using
+the `--lock-indexes` option). To create this table, add `enable_dynamodb_locking
+= true` to `config.auto.tfvars`.
+
 #### Basic authentication
 
 To enable basic authentication, add `enable_basic_auth = true` to
@@ -94,6 +101,7 @@ module "s3pypi" {
   domain = "pypi.example.com"
 
   use_wildcard_certificate = true
+  enable_dynamodb_locking  = true
   enable_basic_auth        = true
 
   providers = {

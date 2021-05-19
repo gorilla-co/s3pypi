@@ -72,4 +72,4 @@ class DynamoDBLocker(Locker):
         raise LockTimeoutError(lock_id)
 
     def _unlock(self, lock_id: str):
-        self.table.delete_item(Item={"LockID": lock_id})
+        self.table.delete_item(Key={"LockID": lock_id})
