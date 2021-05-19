@@ -13,6 +13,10 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 - `--lock-indexes` option to lock index objects in S3 using a DynamoDB table.
 - `--put-root-index` option to write a root index that lists all package names.
 
+### Changed
+
+- Set the default root object to `index.html` in CloudFront.
+
 
 ## 1.0.0rc1 - 2021-05-19
 
