@@ -16,7 +16,7 @@ class Index:
 
     def to_html(self) -> str:
         links = "<br>\n".join(
-            f'<a href="{urllib.parse.quote(fname)}">{fname}</a>'
+            f'<a href="{urllib.parse.quote(fname)}">{fname.rstrip("/")}</a>'
             for fname in sorted(self.filenames)
         )
         return index_html.format(body=indent(links, " " * 4))

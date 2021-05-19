@@ -36,6 +36,7 @@ def upload_packages(
     bucket: str,
     force: bool = False,
     lock_indexes: bool = False,
+    put_root_index: bool = False,
     profile: Optional[str] = None,
     region: Optional[str] = None,
     **kwargs,
@@ -67,11 +68,10 @@ def upload_packages(
 
             storage.put_index(directory, index)
 
-    root = storage.root
-    with lock(root):
-        index = storage.get_index(root)
-        # TODO: Update root index
-        storage.put_index(root, index)
+    if put_root_index:
+        with lock(storage.root):
+            index = storage.build_root_index()
+            storage.put_index(storage.root, index)
 
 
 def parse_distribution(path: Path) -> Distribution:

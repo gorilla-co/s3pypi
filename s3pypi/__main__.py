@@ -56,6 +56,7 @@ def get_arg_parser():
             "This ensures that concurrent invocations of s3pypi do not overwrite each other's changes."
         ),
     )
+    p.add_argument("--put-root-index", action="store_true", help="Write a root index.")
     p.add_argument("-f", "--force", action="store_true", help="Overwrite files.")
     p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     p.add_argument("-V", "--version", action="version", version=__version__)

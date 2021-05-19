@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 
+## Unreleased
+
+### Added
+
+- `--lock-indexes` option to lock index objects in S3 using a DynamoDB table.
+- `--put-root-index` option to write a root index that lists all package names.
+
+
 ## 1.0.0rc1 - 2021-05-19
 
 ### Added

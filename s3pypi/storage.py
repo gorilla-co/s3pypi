@@ -44,6 +44,17 @@ class S3Storage:
             return Index()
         return Index.parse(html.decode())
 
+    def build_root_index(self) -> Index:
+        paginator = self.s3.meta.client.get_paginator("list_objects_v2")
+        result = paginator.paginate(
+            Bucket=self.bucket,
+            Prefix=self.prefix or "",
+            Delimiter="/",
+        )
+        n = len(self.prefix) + 1 if self.prefix else 0
+        dirs = set(p.get("Prefix")[n:] for p in result.search("CommonPrefixes"))
+        return Index(dirs)
+
     def put_index(self, directory: str, index: Index):
         self._object(directory, self.index_name).put(
             Body=index.to_html(),
