@@ -8,21 +8,22 @@ from s3pypi.index import Index
 
 
 class S3Storage:
+    root = "/"
+    _index = "index.html"
+
     def __init__(
         self,
+        session: boto3.session.Session,
         bucket: str,
-        profile: Optional[str] = None,
-        region: Optional[str] = None,
         prefix: Optional[str] = None,
         acl: Optional[str] = None,
         s3_put_args: Optional[dict] = None,
         unsafe_s3_website: bool = False,
     ):
-        session = boto3.Session(profile_name=profile, region_name=region)
         self.s3 = session.resource("s3")
         self.bucket = bucket
         self.prefix = prefix
-        self.index_name = "index.html" if unsafe_s3_website else ""
+        self.index_name = self._index if unsafe_s3_website else ""
         self.put_kwargs = dict(
             ACL=acl or "private",
             **(s3_put_args or {}),
@@ -30,9 +31,11 @@ class S3Storage:
 
     def _object(self, directory: str, filename: str):
         parts = [directory, filename]
+        if parts == [self.root, self.index_name]:
+            parts = [self._index]
         if self.prefix:
             parts.insert(0, self.prefix)
-        return self.s3.Object(self.bucket, "/".join(parts))
+        return self.s3.Object(self.bucket, key="/".join(parts))
 
     def get_index(self, directory: str) -> Index:
         try:
@@ -40,6 +43,17 @@ class S3Storage:
         except botocore.exceptions.ClientError:
             return Index()
         return Index.parse(html.decode())
+
+    def build_root_index(self) -> Index:
+        paginator = self.s3.meta.client.get_paginator("list_objects_v2")
+        result = paginator.paginate(
+            Bucket=self.bucket,
+            Prefix=self.prefix or "",
+            Delimiter="/",
+        )
+        n = len(self.prefix) + 1 if self.prefix else 0
+        dirs = set(p.get("Prefix")[n:] for p in result.search("CommonPrefixes"))
+        return Index(dirs)
 
     def put_index(self, directory: str, index: Index):
         self._object(directory, self.index_name).put(

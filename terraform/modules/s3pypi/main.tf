@@ -14,6 +14,12 @@ variable "use_wildcard_certificate" {
   description = "Use a wildcard certificate (*.example.com)"
 }
 
+variable "enable_dynamodb_locking" {
+  type        = bool
+  default     = false
+  description = "Create a DynamoDB table for locking"
+}
+
 variable "enable_basic_auth" {
   type        = bool
   default     = false
@@ -66,6 +72,8 @@ resource "aws_cloudfront_distribution" "cdn" {
     #response_page_path    = "/404.html"
     error_caching_min_ttl = 0
   }
+
+  default_root_object = "index.html"
 
   default_cache_behavior {
     target_origin_id       = "s3"
@@ -138,6 +146,19 @@ data "aws_iam_policy_document" "s3_policy" {
       type        = "AWS"
       identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
     }
+  }
+}
+
+resource "aws_dynamodb_table" "locks" {
+  count = var.enable_dynamodb_locking ? 1 : 0
+
+  name         = "${var.bucket}-locks"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
   }
 }
 

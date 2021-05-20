@@ -2,8 +2,8 @@ import os
 from contextlib import contextmanager
 
 import boto3
+import moto
 import pytest
-from moto import mock_s3
 
 
 @pytest.fixture(scope="session")
@@ -26,12 +26,31 @@ def aws_credentials():
     os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
     os.environ["AWS_SECURITY_TOKEN"] = "testing"
     os.environ["AWS_SESSION_TOKEN"] = "testing"
+    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 
 
 @pytest.fixture
 def s3_bucket(aws_credentials):
-    with mock_s3():
-        conn = boto3.resource("s3", region_name="us-east-1")
-        bucket = conn.Bucket("s3pypi-test")
+    with moto.mock_s3():
+        s3 = boto3.resource("s3")
+        bucket = s3.Bucket("s3pypi-test")
         bucket.create()
         yield bucket
+
+
+@pytest.fixture
+def dynamodb_table(s3_bucket):
+    name = f"{s3_bucket.name}-locks"
+    with moto.mock_dynamodb2(), moto.mock_sts():
+        db = boto3.resource("dynamodb")
+        db.create_table(
+            TableName=name,
+            AttributeDefinitions=[{"AttributeName": "LockID", "AttributeType": "S"}],
+            KeySchema=[{"AttributeName": "LockID", "KeyType": "HASH"}],
+        )
+        yield db.Table(name)
+
+
+@pytest.fixture
+def boto3_session(s3_bucket):
+    return boto3.session.Session()

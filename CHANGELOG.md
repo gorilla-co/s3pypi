@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 
+## Unreleased
+
+### Added
+
+- Terraform config for an optional DynamoDB table used for distributed locking.
+- `--lock-indexes` option to lock index objects in S3 using said DynamoDB table.
+- `--put-root-index` option to write a root index that lists all package names.
+
+### Changed
+
+- Set CloudFront default root object to `index.html`.
+
+
 ## 1.0.0rc1 - 2021-05-19
 
 ### Added
