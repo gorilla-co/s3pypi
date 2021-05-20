@@ -61,9 +61,8 @@ def upload_packages(
                 filename = distr.local_path.name
 
                 if not force and filename in index.filenames:
-                    log.warning(
-                        "%s already exists! (use --force to overwrite)", filename
-                    )
+                    msg = "%s already exists! (use --force to overwrite)"
+                    log.warning(msg, filename)
                 else:
                     log.info("Uploading %s", distr.local_path)
                     storage.put_distribution(directory, distr.local_path)

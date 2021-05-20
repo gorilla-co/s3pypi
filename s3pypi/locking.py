@@ -2,10 +2,15 @@ import abc
 import datetime as dt
 import hashlib
 import json
+import logging
 import time
 from contextlib import contextmanager
 
 import boto3
+
+from s3pypi import __prog__
+
+log = logging.getLogger(__prog__)
 
 
 class Locker(abc.ABC):
@@ -63,6 +68,8 @@ class DynamoDBLocker(Locker):
                 )
                 return
             except self.exc.ConditionalCheckFailedException:
+                if attempt == 1:
+                    log.info("Waiting to acquire lock... (%s)", lock_id)
                 if attempt < self.max_attempts:
                     time.sleep(self.poll_interval)
 
@@ -77,7 +84,7 @@ class DynamoDBLockTimeoutError(Exception):
     def __init__(self, table: str, item: dict):
         key = json.dumps({"LockID": {"S": item["LockID"]}})
         super().__init__(
-            f"Timed out trying to acquire lock:\n\n{json.dumps(item, indent=2)}\n\n"
+            f"Timed out trying to acquire lock:\n{json.dumps(item, indent=2)}\n\n"
             "Another instance of s3pypi may currently be holding the lock.\n"
             "If this is not the case, you may release the lock as follows:\n\n"
             f"$ aws dynamodb delete-item --table-name {table} --key '{key}'\n"
