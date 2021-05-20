@@ -13,7 +13,7 @@ An extended tutorial on this tool can be found
 Install s3pypi using pip:
 
 ```console
-$ pip install s3pypi==1.0.0rc1
+$ pip install s3pypi==1.0.0rc2
 ```
 
 
