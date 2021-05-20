@@ -4,7 +4,7 @@ version = "1.0.0rc1"
 description = "CLI for creating a Python Package Repository in an S3 bucket"
 authors = [
     "Matteo De Wint <matteo@gorilla.co>",
-    "Ruben Van den Bossche <ruben@novemberfive.co>",
+    "Ruben Van den Bossche <ruben@gorilla.co>",
 ]
 
 [tool.poetry.scripts]

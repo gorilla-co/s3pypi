@@ -44,13 +44,13 @@ class DynamoDBLocker(Locker):
         self,
         session: boto3.session.Session,
         table: str,
-        poll_interval: int = 1,
+        retry_delay: int = 1,
         max_attempts: int = 10,
     ):
         db = session.resource("dynamodb")
         self.table = db.Table(table)
         self.exc = self.table.meta.client.exceptions
-        self.poll_interval = poll_interval
+        self.retry_delay = retry_delay
         self.max_attempts = max_attempts
         self.caller_id = session.client("sts").get_caller_identity()["Arn"]
 
@@ -71,7 +71,7 @@ class DynamoDBLocker(Locker):
                 if attempt == 1:
                     log.info("Waiting to acquire lock... (%s)", lock_id)
                 if attempt < self.max_attempts:
-                    time.sleep(self.poll_interval)
+                    time.sleep(self.retry_delay)
 
         item = self.table.get_item(Key={"LockID": lock_id})["Item"]
         raise DynamoDBLockTimeoutError(self.table.name, item)
