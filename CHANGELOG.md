@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 
+## Unreleased
+
+### Added
+
+- `--s3-endpoint-url` option for targeting a custom S3 endpoint.
+
+
 ## 1.0.0rc2 - 2021-05-20
 
 ### Added

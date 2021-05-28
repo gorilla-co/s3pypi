@@ -17,10 +17,11 @@ class S3Storage:
         bucket: str,
         prefix: Optional[str] = None,
         acl: Optional[str] = None,
+        s3_endpoint_url: Optional[str] = None,
         s3_put_args: Optional[dict] = None,
         unsafe_s3_website: bool = False,
     ):
-        self.s3 = session.resource("s3")
+        self.s3 = session.resource("s3", endpoint_url=s3_endpoint_url)
         self.bucket = bucket
         self.prefix = prefix
         self.index_name = self._index if unsafe_s3_website else ""

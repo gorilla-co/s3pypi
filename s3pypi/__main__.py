@@ -29,6 +29,7 @@ def get_arg_parser():
     p.add_argument("--region", help="Optional AWS region to target.")
     p.add_argument("--prefix", help="Optional prefix to use for S3 object names.")
     p.add_argument("--acl", help="Optional canned ACL to use for S3 objects.")
+    p.add_argument("--s3-endpoint-url", help="Optional custom S3 endpoint URL.")
     p.add_argument(
         "--s3-put-args",
         type=string_dict,
