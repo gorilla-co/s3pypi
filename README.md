@@ -124,6 +124,8 @@ $ python setup.py sdist bdist_wheel
 $ s3pypi dist/* --bucket example-bucket [--prefix PREFIX] [--acl ACL]
 ```
 
+See `s3pypi --help` for a description of all options.
+
 
 ### Installing packages
 
