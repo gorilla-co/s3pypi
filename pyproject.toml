@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "s3pypi"
-version = "1.0.0rc2"
+version = "1.0.0rc3"
 description = "CLI for creating a Python Package Repository in an S3 bucket"
 authors = [
     "Matteo De Wint <matteo@gorilla.co>",

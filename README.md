@@ -10,7 +10,7 @@ S3PyPI is a CLI for creating a Python Package Repository in an S3 bucket.
 Install s3pypi using pip:
 
 ```console
-$ pip install s3pypi==1.0.0rc2
+$ pip install s3pypi==1.0.0rc3
 ```
 
 
