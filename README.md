@@ -2,9 +2,6 @@
 
 S3PyPI is a CLI for creating a Python Package Repository in an S3 bucket.
 
-An extended tutorial on this tool can be found
-[here](https://novemberfive.co/blog/opensource-pypi-package-repository-tutorial/).
-
 
 ## Getting started
 
@@ -25,7 +22,7 @@ these can be created using the [Terraform](https://www.terraform.io/)
 configuration provided in the `terraform/` directory:
 
 ```console
-$ git clone https://github.com/novemberfiveco/s3pypi.git
+$ git clone https://github.com/gorilla-co/s3pypi.git
 $ cd s3pypi/terraform/
 
 $ terraform init
@@ -95,7 +92,7 @@ provider "aws" {
 }
 
 module "s3pypi" {
-  source = "github.com/novemberfiveco/s3pypi//terraform/modules/s3pypi"
+  source = "github.com/gorilla-co/s3pypi//terraform/modules/s3pypi"
 
   bucket = "example-bucket"
   domain = "pypi.example.com"
@@ -161,7 +158,7 @@ contribute.
 
 ## License
 
-Copyright (c) [November Five BVBA](https://novemberfive.co).
+Copyright (c) [Gorillini NV](https://gorilla.co).
 All rights reserved.
 
 Licensed under the [MIT](LICENSE) License.

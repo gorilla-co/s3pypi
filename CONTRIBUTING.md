@@ -123,5 +123,5 @@ contacting the maintainers directly. Keeping communication public means
 everybody can benefit and learn.
 
 
-[Issues]: https://github.com/novemberfiveco/s3pypi/issues
-[Pull Requests]: https://github.com/novemberfiveco/s3pypi/pulls
+[Issues]: https://github.com/gorilla-co/s3pypi/issues
+[Pull Requests]: https://github.com/gorilla-co/s3pypi/pulls
