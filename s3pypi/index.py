@@ -2,22 +2,46 @@ import re
 import urllib.parse
 from dataclasses import dataclass, field
 from textwrap import indent
-from typing import Set
+from typing import Dict, Optional
+
+
+@dataclass(frozen=True)
+class Filename:
+    name: str
+    hash_name: Optional[str] = None
+    hash_value: Optional[str] = None
+
+    @property
+    def url_path(self):
+        path = urllib.parse.quote(self.name)
+        if not self.hash_value:
+            return path
+        return f"{path}#{self.hash_name}={self.hash_value}"
+
+    def __str__(self):
+        return self.name
 
 
 @dataclass
 class Index:
-    filenames: Set[str] = field(default_factory=set)
+    filenames: Dict[str, Filename] = field(default_factory=dict)
 
     @classmethod
     def parse(cls, html: str) -> "Index":
-        filenames = set(re.findall(r'<a href=".+">(.+)</a>', html))
+        matches = re.findall(r'<a href=".+?((\w+)=(\w+))?">(.+)</a>', html)
+        filenames = {
+            name: Filename(name, hash_name or None, hash_value or None)
+            for _, hash_name, hash_value, name in matches
+        }
         return cls(filenames)
+
+    def put(self, filename: Filename):
+        self.filenames[filename.name] = filename
 
     def to_html(self) -> str:
         links = "<br>\n".join(
-            f'<a href="{urllib.parse.quote(fname)}">{fname.rstrip("/")}</a>'
-            for fname in sorted(self.filenames)
+            f'<a href="{f.url_path}">{f.name.rstrip("/")}</a>'
+            for f in sorted(self.filenames.values(), key=lambda f: f.name)
         )
         return index_html.format(body=indent(links, " " * 4))
 

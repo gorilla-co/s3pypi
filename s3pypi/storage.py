@@ -4,7 +4,7 @@ from typing import Optional
 import boto3
 import botocore
 
-from s3pypi.index import Index
+from s3pypi.index import Filename, Index
 
 
 class S3Storage:
@@ -53,7 +53,8 @@ class S3Storage:
             Delimiter="/",
         )
         n = len(self.prefix) + 1 if self.prefix else 0
-        dirs = set(p.get("Prefix")[n:] for p in result.search("CommonPrefixes"))
+        prefixes = (p.get("Prefix")[n:] for p in result.search("CommonPrefixes"))
+        dirs = {p: Filename(p) for p in prefixes}
         return Index(dirs)
 
     def put_index(self, directory: str, index: Index):
