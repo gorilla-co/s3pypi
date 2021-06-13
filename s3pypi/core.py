@@ -12,6 +12,7 @@ import boto3
 
 from s3pypi import __prog__
 from s3pypi.exceptions import S3PyPiError
+from s3pypi.index import Hash
 from s3pypi.locking import DummyLocker, DynamoDBLocker
 from s3pypi.storage import S3Storage
 
@@ -66,7 +67,7 @@ def upload_packages(
                 else:
                     log.info("Uploading %s", distr.local_path)
                     storage.put_distribution(directory, distr.local_path)
-                    index.filenames.add(filename)
+                    index.filenames[filename] = Hash.of("sha256", distr.local_path)
 
             storage.put_index(directory, index)
 

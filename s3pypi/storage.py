@@ -53,8 +53,8 @@ class S3Storage:
             Delimiter="/",
         )
         n = len(self.prefix) + 1 if self.prefix else 0
-        dirs = set(p.get("Prefix")[n:] for p in result.search("CommonPrefixes"))
-        return Index(dirs)
+        dirs = (p.get("Prefix")[n:] for p in result.search("CommonPrefixes"))
+        return Index(dict.fromkeys(dirs))
 
     def put_index(self, directory: str, index: Index):
         self._object(directory, self.index_name).put(

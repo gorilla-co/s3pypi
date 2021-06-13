@@ -5,6 +5,7 @@ import pytest
 
 from s3pypi import __prog__
 from s3pypi.__main__ import main as s3pypi, string_dict
+from s3pypi.index import Hash, Index
 
 
 @pytest.mark.parametrize(
@@ -52,3 +53,28 @@ def test_main_upload_package_exists(chdir, data_dir, s3_bucket, caplog):
     warning = (__prog__, logging.WARNING, msg)
 
     assert caplog.record_tuples == [success, warning, success]
+
+
+def test_main_upload_package_with_force_updates_hash(chdir, data_dir, s3_bucket):
+    with open(data_dir / "index" / "hello_world.html", "rb") as index_file:
+        s3_bucket.Object("hello-world/").put(Body=index_file)
+
+    def get_index():
+        html = s3_bucket.Object("hello-world/").get()["Body"].read()
+        return Index.parse(html.decode())
+
+    assert get_index().filenames == {
+        "hello-world-0.1.0.tar.gz": None,
+        "hello_world-0.1.0-py3-none-any.whl": None,
+    }
+
+    with chdir(data_dir):
+        dist = "dists/hello_world-0.1.0-py3-none-any.whl"
+        s3pypi(dist, "--force", "--bucket", s3_bucket.name)
+
+    assert get_index().filenames == {
+        "hello-world-0.1.0.tar.gz": None,
+        "hello_world-0.1.0-py3-none-any.whl": Hash(
+            "sha256", "c5a2633aecf5adc5ae49b868e12faf01f2199b914d4296399b52dec62cb70fb3"
+        ),
+    }

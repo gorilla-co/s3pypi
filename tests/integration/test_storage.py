@@ -4,7 +4,7 @@ from s3pypi.storage import S3Storage
 
 def test_index_storage_roundtrip(boto3_session, s3_bucket):
     directory = "foo"
-    index = Index({"bar"})
+    index = Index({"bar": None})
 
     storage = S3Storage(boto3_session, s3_bucket.name)
     storage.put_index(directory, index)
