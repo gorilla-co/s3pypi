@@ -1,6 +1,6 @@
 import pytest
 
-from s3pypi.index import Filename, Index
+from s3pypi.index import Hash, Index
 
 
 @pytest.fixture(
@@ -27,16 +27,13 @@ from s3pypi.index import Filename, Index
                     "-py2-none-any.whl",
                 )
             ],
-            ["1234" * 16 if i % 3 == 0 else "" for i in range(0, 20)],
+            [Hash("sha256", "1234" * 16) if i % 3 == 0 else None for i in range(0, 20)],
         )
     ],
 )
 def index_html(request, data_dir):
     index_name, names, hashes = request.param
-    filenames = {
-        name: Filename(name, "sha256", hash) if hash else Filename(name)
-        for name, hash in zip(names, hashes)
-    }
+    filenames = dict(zip(names, hashes))
     with open(data_dir / "index" / f"{index_name}.html") as f:
         html = f.read().strip()
         yield html, filenames
@@ -52,21 +49,3 @@ def test_render_index(index_html):
     expected_html, filenames = index_html
     html = Index(filenames).to_html()
     assert html == expected_html
-
-
-@pytest.mark.parametrize(
-    "filename,expected",
-    [
-        (Filename("3pypi-0.post0-py2-none-any.whl"), "3pypi-0.post0-py2-none-any.whl"),
-        (
-            Filename("3pypi-0.post0.tar.gz", "sha256", "12345"),
-            "3pypi-0.post0.tar.gz#sha256=12345",
-        ),
-        (
-            Filename("3pypi-0+local.tar.gz", "md5", "abcdef"),
-            "3pypi-0%2Blocal.tar.gz#md5=abcdef",
-        ),
-    ],
-)
-def test_filename_url(filename, expected):
-    assert filename.url_path == expected

@@ -1,9 +1,7 @@
 import email
-import hashlib
 import logging
 import re
 from dataclasses import dataclass
-from functools import lru_cache
 from itertools import groupby
 from operator import attrgetter
 from pathlib import Path
@@ -14,7 +12,7 @@ import boto3
 
 from s3pypi import __prog__
 from s3pypi.exceptions import S3PyPiError
-from s3pypi.index import Filename
+from s3pypi.index import Hash
 from s3pypi.locking import DummyLocker, DynamoDBLocker
 from s3pypi.storage import S3Storage
 
@@ -28,12 +26,6 @@ class Distribution:
     name: str
     version: str
     local_path: Path
-
-    @property
-    def filename(self) -> Filename:
-        hash_name = "sha256"
-        hash_value = calculate_hash(self.local_path, hash_name)
-        return Filename(self.local_path.name, hash_name, hash_value)
 
 
 def normalize_package_name(name: str) -> str:
@@ -67,15 +59,15 @@ def upload_packages(
             index = storage.get_index(directory)
 
             for distr in group:
-                filename = distr.filename
+                filename = distr.local_path.name
 
-                if not force and filename.name in index.filenames:
+                if not force and filename in index.filenames:
                     msg = "%s already exists! (use --force to overwrite)"
                     log.warning(msg, filename)
                 else:
                     log.info("Uploading %s", distr.local_path)
                     storage.put_distribution(directory, distr.local_path)
-                    index.put(filename)
+                    index.filenames[filename] = Hash.of("sha256", distr.local_path)
 
             storage.put_index(directory, index)
 
@@ -109,16 +101,3 @@ def extract_wheel_metadata(path: Path) -> PackageMetadata:
             raise S3PyPiError(f"No wheel metadata found in {path}") from None
 
     return email.message_from_string(text)
-
-
-@lru_cache(maxsize=None)
-def calculate_hash(local_path: Path, hash_name: str):
-    hash = hashlib.new(hash_name)
-    with open(local_path, "rb") as file:
-        while True:
-            block = file.read(65536)
-            if not block:
-                break
-            hash.update(block)
-
-    return hash.hexdigest()
