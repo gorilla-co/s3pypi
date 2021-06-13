@@ -55,7 +55,7 @@ def test_main_upload_package_exists(chdir, data_dir, s3_bucket, caplog):
     assert caplog.record_tuples == [success, warning, success]
 
 
-def test_main_update_package_url(chdir, data_dir, s3_bucket):
+def test_main_upload_package_with_force_updates_hash(chdir, data_dir, s3_bucket):
     with open(data_dir / "index" / "hello_world.html", "rb") as index_file:
         s3_bucket.Object("hello-world/").put(Body=index_file)
 
@@ -63,22 +63,14 @@ def test_main_update_package_url(chdir, data_dir, s3_bucket):
         html = s3_bucket.Object("hello-world/").get()["Body"].read()
         return Index.parse(html.decode())
 
-    with chdir(data_dir):
-        s3pypi("dists/hello_world-0.1.0-py3-none-any.whl", "--bucket", s3_bucket.name)
-
-        assert get_index().filenames == {
-            "hello-world-0.1.0.tar.gz": None,
-            "hello_world-0.1.0-py3-none-any.whl": None,
-        }
+    assert get_index().filenames == {
+        "hello-world-0.1.0.tar.gz": None,
+        "hello_world-0.1.0-py3-none-any.whl": None,
+    }
 
     with chdir(data_dir):
-        for _ in range(2):
-            s3pypi(
-                "dists/hello_world-0.1.0-py3-none-any.whl",
-                "--bucket",
-                s3_bucket.name,
-                "--force",
-            )
+        dist = "dists/hello_world-0.1.0-py3-none-any.whl"
+        s3pypi(dist, "--force", "--bucket", s3_bucket.name)
 
     assert get_index().filenames == {
         "hello-world-0.1.0.tar.gz": None,
