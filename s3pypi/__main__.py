@@ -62,6 +62,11 @@ def get_arg_parser():
         action="store_true",
         help="Write a root index that lists all available package names.",
     )
+    p.add_argument(
+        "--no-sign-request",
+        action="store_true",
+        help="Dont use authentication when communicating to s3.",
+    )
     p.add_argument("-f", "--force", action="store_true", help="Overwrite files.")
     p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     p.add_argument("-V", "--version", action="version", version=__version__)
