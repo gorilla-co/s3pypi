@@ -1,6 +1,7 @@
 import email
 import logging
 import re
+from contextlib import suppress
 from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter
@@ -50,7 +51,7 @@ def upload_packages(
         else DummyLocker()
     )
 
-    distributions = [parse_distribution(path) for path in dist]
+    distributions = parse_distributions(dist)
     get_name = attrgetter("name")
 
     for name, group in groupby(sorted(distributions, key=get_name), get_name):
@@ -87,6 +88,18 @@ def parse_distribution(path: Path) -> Distribution:
         raise S3PyPiError(f"Unknown file type: {path}")
 
     return Distribution(name, version, path)
+
+
+def parse_distributions(paths: List[Path]) -> List[Distribution]:
+    dists = []
+    for path in paths:
+        if path.is_file():
+            dists.append(parse_distribution(path))
+        if path.is_dir():
+            for path_ in [f for f in path.iterdir() if f.is_file()]:
+                with suppress(S3PyPiError):
+                    dists.append(parse_distribution(path_))
+    return dists
 
 
 def extract_wheel_metadata(path: Path) -> PackageMetadata:
