@@ -3,6 +3,7 @@ from typing import Optional
 
 import boto3
 import botocore
+from botocore.config import Config
 
 from s3pypi.index import Index
 
@@ -20,8 +21,13 @@ class S3Storage:
         s3_endpoint_url: Optional[str] = None,
         s3_put_args: Optional[dict] = None,
         unsafe_s3_website: bool = False,
+        no_sign_request: bool = False,
     ):
-        self.s3 = session.resource("s3", endpoint_url=s3_endpoint_url)
+        _config = None
+        if no_sign_request:
+            _config = Config(signature_version=botocore.session.UNSIGNED)
+
+        self.s3 = session.resource("s3", endpoint_url=s3_endpoint_url, config=_config)
         self.bucket = bucket
         self.prefix = prefix
         self.index_name = self._index if unsafe_s3_website else ""
