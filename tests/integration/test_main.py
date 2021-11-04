@@ -1,4 +1,3 @@
-import glob
 import logging
 
 import pytest
@@ -23,8 +22,8 @@ def test_string_dict(text, expected):
 
 def test_main_upload_package(chdir, data_dir, s3_bucket, dynamodb_table):
     with chdir(data_dir):
-        dist = sorted(glob.glob("dists/*"))
-        s3pypi(*dist, "--bucket", s3_bucket.name, "--lock-indexes", "--put-root-index")
+        dist = "dists/*"
+        s3pypi(dist, "--bucket", s3_bucket.name, "--lock-indexes", "--put-root-index")
 
     def read(key: str) -> bytes:
         return s3_bucket.Object(key).get()["Body"].read()
