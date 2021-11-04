@@ -12,6 +12,8 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 - SHA-256 checksums of packages to URLs.
   [@andrei-shabanski](https://github.com/andrei-shabanski)
+- `--no-sign-request` option to disable S3 authentication.
+  [@jaustinpage](https://github.com/jaustinpage)
 
 
 ## 1.0.0rc3 - 2021-06-05
