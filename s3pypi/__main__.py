@@ -65,7 +65,7 @@ def get_arg_parser():
     p.add_argument(
         "--no-sign-request",
         action="store_true",
-        help="Dont use authentication when communicating to s3.",
+        help="Don't use authentication when communicating with S3.",
     )
     p.add_argument("-f", "--force", action="store_true", help="Overwrite files.")
     p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
