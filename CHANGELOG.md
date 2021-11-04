@@ -14,6 +14,8 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
   [@andrei-shabanski](https://github.com/andrei-shabanski)
 - `--no-sign-request` option to disable S3 authentication.
   [@jaustinpage](https://github.com/jaustinpage)
+- Expand glob patterns in case they were not expanded by a shell.
+  [@jaustinpage](https://github.com/jaustinpage)
 
 
 ## 1.0.0rc3 - 2021-06-05
