@@ -27,11 +27,7 @@ class S3Storage:
         if no_sign_request:
             _config = Config(signature_version=botocore.session.UNSIGNED)
 
-        self.s3 = session.resource(
-            "s3",
-            endpoint_url=s3_endpoint_url,
-            config=_config,
-        )
+        self.s3 = session.resource("s3", endpoint_url=s3_endpoint_url, config=_config)
         self.bucket = bucket
         self.prefix = prefix
         self.index_name = self._index if unsafe_s3_website else ""
