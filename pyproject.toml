@@ -13,6 +13,7 @@ s3pypi = "s3pypi.__main__:main"
 [tool.poetry.dependencies]
 boto3 = "^1.9.211"
 Jinja2 = "^2.10.1"
+markupsafe = "<=2.0.1"
 python = "~2.7 || ^3.5"
 wheel = "^0.33.6"
 
