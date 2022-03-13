@@ -47,6 +47,7 @@ def dynamodb_table(s3_bucket):
             TableName=name,
             AttributeDefinitions=[{"AttributeName": "LockID", "AttributeType": "S"}],
             KeySchema=[{"AttributeName": "LockID", "KeyType": "HASH"}],
+            BillingMode="PAY_PER_REQUEST",
         )
         yield db.Table(name)
 
