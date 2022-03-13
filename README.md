@@ -107,6 +107,33 @@ module "s3pypi" {
 }
 ```
 
+#### Migrating from s3pypi 0.x to 1.x
+
+Existing resources created using the CloudFormation templates from s3pypi 0.x
+can be [imported into Terraform] and [removed from CloudFormation]. For example:
+
+```console
+$ terraform init
+$ terraform import module.s3pypi.aws_s3_bucket.pypi example-bucket
+$ terraform import module.s3pypi.aws_cloudfront_distribution.cdn EDFDVBD6EXAMPLE
+$ terraform apply
+```
+
+[imported into Terraform]: https://www.terraform.io/docs/import/index.html
+[removed from CloudFormation]: https://aws.amazon.com/premiumsupport/knowledge-center/delete-cf-stack-retain-resources/
+
+In this new configuration, CloudFront uses the S3 REST API endpoint as its
+origin, not the S3 website endpoint. This allows the bucket to remain private,
+with CloudFront accessing it through an [Origin Access Identity (OAI)]. To make
+this work with your existing S3 bucket, all `<package>/index.html` objects must
+be renamed to `<package>/`. You can do so using the provided script:
+
+```console
+$ scripts/migrate-s3-index.py example-bucket
+```
+
+[Origin Access Identity (OAI)]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
+
 
 ## Usage
 
