@@ -3,6 +3,12 @@
 S3PyPI is a CLI for creating a Python Package Repository in an S3 bucket.
 
 
+## Alternatives
+
+- [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) is a fully managed
+  service that integrates with IAM.
+
+
 ## Getting started
 
 ### Installation
@@ -10,7 +16,7 @@ S3PyPI is a CLI for creating a Python Package Repository in an S3 bucket.
 Install s3pypi using pip:
 
 ```console
-$ pip install s3pypi==1.0.0rc3
+$ pip install s3pypi
 ```
 
 
