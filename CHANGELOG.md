@@ -44,13 +44,9 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 - Terraform configuration for S3 and CloudFront, including optional **basic
   authentication** using Lambda@Edge and AWS Systems Manager Parameter Store.
-  Existing resources created using the old CloudFormation templates can be
-  [imported into Terraform](https://www.terraform.io/docs/import/index.html) and
-  [removed from CloudFormation].
+  Instructions for migrating from CloudFormation are in the [README](README.md).
 - `--s3-put-args` option for passing extra arguments to S3 PutObject calls.
   Example: `--s3-put-args='ServerSideEncryption=aws:kms,SSEKMSKeyId=1234...'`
-
-[removed from CloudFormation]: https://aws.amazon.com/premiumsupport/knowledge-center/delete-cf-stack-retain-resources/
 
 ### Changed
 
