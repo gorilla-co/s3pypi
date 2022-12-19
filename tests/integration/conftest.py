@@ -41,7 +41,7 @@ def s3_bucket(aws_credentials):
 @pytest.fixture
 def dynamodb_table(s3_bucket):
     name = f"{s3_bucket.name}-locks"
-    with moto.mock_dynamodb2(), moto.mock_sts():
+    with moto.mock_dynamodb(), moto.mock_sts():
         db = boto3.resource("dynamodb")
         db.create_table(
             TableName=name,
