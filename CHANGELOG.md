@@ -8,6 +8,10 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 ## Unreleased
 
+### Added
+
+- Allow uploading source distributions with `.tar.bz2`, `.tar.xz`, and `.zip` extensions.
+
 ### Changed
 
 - Require Python 3.7 or greater.
