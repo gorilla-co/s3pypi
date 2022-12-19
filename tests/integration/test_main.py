@@ -37,6 +37,7 @@ def test_main_upload_package(chdir, data_dir, s3_bucket, dynamodb_table):
 
     assert_pkg_exists("foo/", "foo-0.1.0.tar.gz")
     assert_pkg_exists("hello-world/", "hello_world-0.1.0-py3-none-any.whl")
+    assert_pkg_exists("xyz/", "xyz-0.1.0.zip")
 
 
 def test_main_upload_package_exists(chdir, data_dir, s3_bucket, caplog):

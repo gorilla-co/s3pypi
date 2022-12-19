@@ -79,13 +79,17 @@ def upload_packages(
 
 
 def parse_distribution(path: Path) -> Distribution:
-    if path.name.endswith(".tar.gz"):
-        name, version = path.name[:-7].rsplit("-", 1)
-    elif path.suffix == ".whl":
+    extensions = (".whl", ".tar.gz", ".tar.bz2", ".tar.xz", ".zip")
+
+    ext = next((ext for ext in extensions if path.name.endswith(ext)), "")
+    if not ext:
+        raise S3PyPiError(f"Unknown file type: {path}")
+
+    if ext == ".whl":
         meta = extract_wheel_metadata(path)
         name, version = meta["Name"], meta["Version"]
     else:
-        raise S3PyPiError(f"Unknown file type: {path}")
+        name, version = path.name[: -len(ext)].rsplit("-", 1)
 
     return Distribution(name, version, path)
 
