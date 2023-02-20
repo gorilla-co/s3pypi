@@ -100,10 +100,16 @@ def parse_distributions(paths: List[Path]) -> List[Distribution]:
         if path.is_file():
             dists.append(parse_distribution(path))
         elif not path.exists():
+            new_dists = []
             expanded_paths = Path(".").glob(str(path))
             for expanded_path in (f for f in expanded_paths if f.is_file()):
                 with suppress(S3PyPiError):
-                    dists.append(parse_distribution(expanded_path))
+                    new_dists.append(parse_distribution(expanded_path))
+            if not new_dists:
+                raise S3PyPiError(f"No valid files found matching: {path}")
+            dists.extend(new_dists)
+        else:
+            raise S3PyPiError(f"Not a file: {path}")
     return dists
 
 
