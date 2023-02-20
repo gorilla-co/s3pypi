@@ -55,6 +55,25 @@ def test_main_upload_package_exists(chdir, data_dir, s3_bucket, caplog):
     assert caplog.record_tuples == [success, warning, success]
 
 
+@pytest.mark.parametrize(
+    ["dists", "error_msg"],
+    [
+        (["dists"], r"Not a file: dists"),
+        (["dists/invalid.whl"], r"No valid files found matching: dists/invalid\.whl"),
+        (
+            ["dists/foo-0.1.0.tar.gz", "dists/*.invalid"],
+            r"No valid files found matching: dists/\*\.invalid",
+        ),
+    ],
+)
+def test_main_upload_package_invalid(
+    dists, error_msg, chdir, data_dir, s3_bucket, caplog
+):
+    with chdir(data_dir):
+        with pytest.raises(SystemExit, match=f"ERROR: {error_msg}"):
+            s3pypi(*dists, "--bucket", s3_bucket.name)
+
+
 def test_main_upload_package_with_force_updates_hash(chdir, data_dir, s3_bucket):
     with open(data_dir / "index" / "hello_world.html", "rb") as index_file:
         s3_bucket.Object("hello-world/").put(Body=index_file)
