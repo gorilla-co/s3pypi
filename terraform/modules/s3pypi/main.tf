@@ -1,3 +1,15 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+      configuration_aliases = [
+        aws.us_east_1,
+      ]
+    }
+  }
+}
+
 variable "bucket" {
   type        = string
   description = "S3 bucket name"
@@ -28,10 +40,6 @@ variable "enable_basic_auth" {
 
 locals {
   hosted_zone = replace(var.domain, "/^[^.]+\\./", "")
-}
-
-provider "aws" {
-  alias = "us_east_1"
 }
 
 data "aws_acm_certificate" "viewer" {
@@ -129,7 +137,6 @@ resource "aws_cloudfront_origin_access_identity" "oai" {}
 
 resource "aws_s3_bucket" "pypi" {
   bucket = var.bucket
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "s3_policy" {
