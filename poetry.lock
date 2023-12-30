@@ -504,6 +504,17 @@ typing-extensions = {version = ">=4.1.0", markers = "python_version < \"3.9\""}
 botocore = ["botocore"]
 
 [[package]]
+name = "bump2version"
+version = "1.0.1"
+description = "Version-bump your software with a single command!"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "bump2version-1.0.1-py2.py3-none-any.whl", hash = "sha256:37f927ea17cde7ae2d7baf832f8e80ce3777624554a653006c9144f8017fe410"},
+    {file = "bump2version-1.0.1.tar.gz", hash = "sha256:762cb2bfad61f4ec8e2bdf452c7c267416f8c70dd9ecb1653fd0bbb01fa936e6"},
+]
+
+[[package]]
 name = "certifi"
 version = "2023.11.17"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -1463,4 +1474,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "b0e431bdd7f9efcf33ef6fbd4460e20ce1b911775da09fda32ab94b0ce001646"
+content-hash = "a38bcea3d131c8c712b538c2e385cbe011149f74e6bc25f2eb4292e16dbeaba9"
