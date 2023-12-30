@@ -15,11 +15,22 @@ from s3pypi import __prog__
 from s3pypi.exceptions import S3PyPiError
 from s3pypi.index import Hash
 from s3pypi.locking import DummyLocker, DynamoDBLocker
-from s3pypi.storage import S3Storage
+from s3pypi.storage import S3Config, S3Storage
 
 log = logging.getLogger(__prog__)
 
 PackageMetadata = email.message.Message
+
+
+@dataclass
+class Config:
+    dist: List[Path]
+    s3: S3Config
+    force: bool = False
+    lock_indexes: bool = False
+    put_root_index: bool = False
+    profile: Optional[str] = None
+    region: Optional[str] = None
 
 
 @dataclass
@@ -33,25 +44,16 @@ def normalize_package_name(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name.lower())
 
 
-def upload_packages(
-    dist: List[Path],
-    bucket: str,
-    force: bool = False,
-    lock_indexes: bool = False,
-    put_root_index: bool = False,
-    profile: Optional[str] = None,
-    region: Optional[str] = None,
-    **kwargs,
-):
-    session = boto3.Session(profile_name=profile, region_name=region)
-    storage = S3Storage(session, bucket, **kwargs)
+def upload_packages(cfg: Config) -> None:
+    session = boto3.Session(profile_name=cfg.profile, region_name=cfg.region)
+    storage = S3Storage(session, cfg.s3)
     lock = (
-        DynamoDBLocker(session, table=f"{bucket}-locks")
-        if lock_indexes
+        DynamoDBLocker(session, table=f"{cfg.s3.bucket}-locks")
+        if cfg.lock_indexes
         else DummyLocker()
     )
 
-    distributions = parse_distributions(dist)
+    distributions = parse_distributions(cfg.dist)
     get_name = attrgetter("name")
 
     for name, group in groupby(sorted(distributions, key=get_name), get_name):
@@ -62,7 +64,7 @@ def upload_packages(
             for distr in group:
                 filename = distr.local_path.name
 
-                if not force and filename in index.filenames:
+                if not cfg.force and filename in index.filenames:
                     msg = "%s already exists! (use --force to overwrite)"
                     log.warning(msg, filename)
                 else:
@@ -72,7 +74,7 @@ def upload_packages(
 
             storage.put_index(directory, index)
 
-    if put_root_index:
+    if cfg.put_root_index:
         with lock(storage.root):
             index = storage.build_root_index()
             storage.put_index(storage.root, index)

@@ -33,6 +33,7 @@ def get_arg_parser():
     p.add_argument(
         "--s3-put-args",
         type=string_dict,
+        default={},
         help=(
             "Optional extra arguments to S3 PutObject calls. Example: "
             "'ServerSideEncryption=aws:kms,SSEKMSKeyId=1234...'"
@@ -73,12 +74,31 @@ def get_arg_parser():
     return p
 
 
-def main(*args):
-    kwargs = vars(get_arg_parser().parse_args(args or sys.argv[1:]))
-    log.setLevel(logging.DEBUG if kwargs.pop("verbose") else logging.INFO)
+def main(*raw_args: str) -> None:
+    args = get_arg_parser().parse_args(raw_args or sys.argv[1:])
+    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
+
+    cfg = core.Config(
+        dist=args.dist,
+        s3=core.S3Config(
+            bucket=args.bucket,
+            prefix=args.prefix,
+            endpoint_url=args.s3_endpoint_url,
+            put_kwargs=args.s3_put_args,
+            unsafe_s3_website=args.unsafe_s3_website,
+            no_sign_request=args.no_sign_request,
+        ),
+        force=args.force,
+        lock_indexes=args.lock_indexes,
+        put_root_index=args.put_root_index,
+        profile=args.profile,
+        region=args.region,
+    )
+    if args.acl:
+        cfg.s3.put_kwargs["ACL"] = args.acl
 
     try:
-        core.upload_packages(**kwargs)
+        core.upload_packages(cfg)
     except core.S3PyPiError as e:
         sys.exit(f"ERROR: {e}")
 
