@@ -68,7 +68,17 @@ def get_arg_parser():
         action="store_true",
         help="Don't use authentication when communicating with S3.",
     )
-    p.add_argument("-f", "--force", action="store_true", help="Overwrite files.")
+
+    g = p.add_mutually_exclusive_group()
+    g.add_argument(
+        "--strict",
+        action="store_true",
+        help="Fail when trying to upload existing files.",
+    )
+    g.add_argument(
+        "-f", "--force", action="store_true", help="Overwrite existing files."
+    )
+
     p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     p.add_argument("-V", "--version", action="version", version=__version__)
     return p
@@ -88,6 +98,7 @@ def main(*raw_args: str) -> None:
             unsafe_s3_website=args.unsafe_s3_website,
             no_sign_request=args.no_sign_request,
         ),
+        strict=args.strict,
         force=args.force,
         lock_indexes=args.lock_indexes,
         put_root_index=args.put_root_index,

@@ -26,6 +26,7 @@ PackageMetadata = email.message.Message
 class Config:
     dist: List[Path]
     s3: S3Config
+    strict: bool = False
     force: bool = False
     lock_indexes: bool = False
     put_root_index: bool = False
@@ -55,6 +56,7 @@ def upload_packages(cfg: Config) -> None:
 
     distributions = parse_distributions(cfg.dist)
     get_name = attrgetter("name")
+    existing_files = []
 
     for name, group in groupby(sorted(distributions, key=get_name), get_name):
         directory = normalize_package_name(name)
@@ -65,6 +67,7 @@ def upload_packages(cfg: Config) -> None:
                 filename = distr.local_path.name
 
                 if not cfg.force and filename in index.filenames:
+                    existing_files.append(filename)
                     msg = "%s already exists! (use --force to overwrite)"
                     log.warning(msg, filename)
                 else:
@@ -78,6 +81,9 @@ def upload_packages(cfg: Config) -> None:
         with lock(storage.root):
             index = storage.build_root_index()
             storage.put_index(storage.root, index)
+
+    if cfg.strict and existing_files:
+        raise S3PyPiError(f"Found {len(existing_files)} existing files on S3")
 
 
 def parse_distribution(path: Path) -> Distribution:

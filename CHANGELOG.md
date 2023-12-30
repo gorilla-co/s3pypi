@@ -8,6 +8,10 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 ## Unreleased
 
+### Added
+
+- `--strict` option to fail when trying to upload existing files.
+
 ### Changed
 
 - Require Python 3.8 or greater.
