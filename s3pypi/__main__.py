@@ -1,8 +1,8 @@
 from __future__ import print_function
 
-import argparse
 import logging
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 from typing import Dict
 
@@ -16,8 +16,8 @@ def string_dict(text: str) -> Dict[str, str]:
     return dict(tuple(item.strip().split("=", 1)) for item in text.split(","))  # type: ignore
 
 
-def get_arg_parser():
-    p = argparse.ArgumentParser(prog=__prog__)
+def build_arg_parser() -> ArgumentParser:
+    p = ArgumentParser(prog=__prog__)
     p.add_argument(
         "dist",
         nargs="+",
@@ -85,7 +85,7 @@ def get_arg_parser():
 
 
 def main(*raw_args: str) -> None:
-    args = get_arg_parser().parse_args(raw_args or sys.argv[1:])
+    args = build_arg_parser().parse_args(raw_args or sys.argv[1:])
     log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
 
     cfg = core.Config(
