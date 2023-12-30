@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 
+## 1.2.0 - 2023-12-30
+
+### Added
+
+- `--strict` option to fail when trying to upload existing files.
+
+### Changed
+
+- Require Python 3.8 or greater.
+
+
 ## 1.1.1 - 2023-02-20
 
 ### Fixed

@@ -5,6 +5,7 @@ import json
 import logging
 import time
 from contextlib import contextmanager
+from typing import Iterator
 
 import boto3
 
@@ -15,7 +16,7 @@ log = logging.getLogger(__prog__)
 
 class Locker(abc.ABC):
     @contextmanager
-    def __call__(self, key: str):
+    def __call__(self, key: str) -> Iterator[None]:
         lock_id = hashlib.sha1(key.encode()).hexdigest()
         self._lock(lock_id)
         try:
@@ -24,16 +25,16 @@ class Locker(abc.ABC):
             self._unlock(lock_id)
 
     @abc.abstractmethod
-    def _lock(self, lock_id: str):
+    def _lock(self, lock_id: str) -> None:
         ...
 
     @abc.abstractmethod
-    def _unlock(self, lock_id: str):
+    def _unlock(self, lock_id: str) -> None:
         ...
 
 
 class DummyLocker(Locker):
-    def _lock(self, lock_id: str):
+    def _lock(self, lock_id: str) -> None:
         pass
 
     _unlock = _lock
@@ -54,7 +55,7 @@ class DynamoDBLocker(Locker):
         self.max_attempts = max_attempts
         self.caller_id = session.client("sts").get_caller_identity()["Arn"]
 
-    def _lock(self, lock_id: str):
+    def _lock(self, lock_id: str) -> None:
         for attempt in range(1, self.max_attempts + 1):
             now = dt.datetime.now(dt.timezone.utc)
             try:
@@ -76,7 +77,7 @@ class DynamoDBLocker(Locker):
         item = self.table.get_item(Key={"LockID": lock_id})["Item"]
         raise DynamoDBLockTimeoutError(self.table.name, item)
 
-    def _unlock(self, lock_id: str):
+    def _unlock(self, lock_id: str) -> None:
         self.table.delete_item(Key={"LockID": lock_id})
 
 

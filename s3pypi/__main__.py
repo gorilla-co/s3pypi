@@ -1,8 +1,8 @@
 from __future__ import print_function
 
-import argparse
 import logging
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 from typing import Dict
 
@@ -16,8 +16,8 @@ def string_dict(text: str) -> Dict[str, str]:
     return dict(tuple(item.strip().split("=", 1)) for item in text.split(","))  # type: ignore
 
 
-def get_arg_parser():
-    p = argparse.ArgumentParser(prog=__prog__)
+def build_arg_parser() -> ArgumentParser:
+    p = ArgumentParser(prog=__prog__)
     p.add_argument(
         "dist",
         nargs="+",
@@ -33,6 +33,7 @@ def get_arg_parser():
     p.add_argument(
         "--s3-put-args",
         type=string_dict,
+        default={},
         help=(
             "Optional extra arguments to S3 PutObject calls. Example: "
             "'ServerSideEncryption=aws:kms,SSEKMSKeyId=1234...'"
@@ -67,18 +68,48 @@ def get_arg_parser():
         action="store_true",
         help="Don't use authentication when communicating with S3.",
     )
-    p.add_argument("-f", "--force", action="store_true", help="Overwrite files.")
+
+    g = p.add_mutually_exclusive_group()
+    g.add_argument(
+        "--strict",
+        action="store_true",
+        help="Fail when trying to upload existing files.",
+    )
+    g.add_argument(
+        "-f", "--force", action="store_true", help="Overwrite existing files."
+    )
+
     p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
     p.add_argument("-V", "--version", action="version", version=__version__)
     return p
 
 
-def main(*args):
-    kwargs = vars(get_arg_parser().parse_args(args or sys.argv[1:]))
-    log.setLevel(logging.DEBUG if kwargs.pop("verbose") else logging.INFO)
+def main(*raw_args: str) -> None:
+    args = build_arg_parser().parse_args(raw_args or sys.argv[1:])
+    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
+
+    cfg = core.Config(
+        dist=args.dist,
+        s3=core.S3Config(
+            bucket=args.bucket,
+            prefix=args.prefix,
+            endpoint_url=args.s3_endpoint_url,
+            put_kwargs=args.s3_put_args,
+            unsafe_s3_website=args.unsafe_s3_website,
+            no_sign_request=args.no_sign_request,
+        ),
+        strict=args.strict,
+        force=args.force,
+        lock_indexes=args.lock_indexes,
+        put_root_index=args.put_root_index,
+        profile=args.profile,
+        region=args.region,
+    )
+    if args.acl:
+        cfg.s3.put_kwargs["ACL"] = args.acl
 
     try:
-        core.upload_packages(**kwargs)
+        core.upload_packages(cfg)
     except core.S3PyPiError as e:
         sys.exit(f"ERROR: {e}")
 
