@@ -45,6 +45,7 @@ def test_main_upload_package_exists(chdir, data_dir, s3_bucket, caplog):
 
     with chdir(data_dir):
         s3pypi(dist, "--bucket", s3_bucket.name)
+        s3pypi(dist, "--bucket", s3_bucket.name)
 
         with pytest.raises(SystemExit, match="ERROR: Found 1 existing files on S3"):
             s3pypi(dist, "--strict", "--bucket", s3_bucket.name)
@@ -55,7 +56,7 @@ def test_main_upload_package_exists(chdir, data_dir, s3_bucket, caplog):
     success = (__prog__, logging.INFO, "Uploading " + dist)
     warning = (__prog__, logging.WARNING, msg)
 
-    assert caplog.record_tuples == [success, warning, success]
+    assert caplog.record_tuples == [success, warning, warning, success]
 
 
 @pytest.mark.parametrize(
