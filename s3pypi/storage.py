@@ -1,6 +1,7 @@
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import boto3
 import botocore
@@ -36,8 +37,8 @@ class S3Storage:
     def _object(self, directory: str, filename: str) -> Object:
         parts = [directory, filename]
         if parts == [self.root, self.index_name]:
-            parts = [self._index]
-        if self.cfg.prefix:
+            parts = [p, self.index_name] if (p := self.cfg.prefix) else [self._index]
+        elif self.cfg.prefix:
             parts.insert(0, self.cfg.prefix)
         return self.s3.Object(self.cfg.bucket, key="/".join(parts))
 
@@ -49,15 +50,25 @@ class S3Storage:
         return Index.parse(html.decode())
 
     def build_root_index(self) -> Index:
-        paginator = self.s3.meta.client.get_paginator("list_objects_v2")
-        result = paginator.paginate(
-            Bucket=self.cfg.bucket,
-            Prefix=self.cfg.prefix or "",
-            Delimiter="/",
-        )
-        n = len(self.cfg.prefix) + 1 if self.cfg.prefix else 0
-        dirs = (p.get("Prefix")[n:] for p in result.search("CommonPrefixes"))
-        return Index(dict.fromkeys(dirs))
+        return Index(dict.fromkeys(self._list_dirs()))
+
+    def _list_dirs(self) -> List[str]:
+        results = set()
+        root = f"{p}/" if (p := self.cfg.prefix) else ""
+        todo = deque([root])
+        while todo:
+            current = todo.popleft()
+            if children := [
+                prefix
+                for item in self.s3.meta.client.get_paginator("list_objects_v2")
+                .paginate(Bucket=self.cfg.bucket, Delimiter="/", Prefix=current)
+                .search("CommonPrefixes")
+                if item and (prefix := item.get("Prefix"))
+            ]:
+                todo.extend(children)
+            else:
+                results.add(current[len(root) :])
+        return sorted(results)
 
     def put_index(self, directory: str, index: Index) -> None:
         self._object(directory, self.index_name).put(
