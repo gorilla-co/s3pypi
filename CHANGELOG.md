@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 
-## 2.0.0rc0 - 2024-01-XX
+## 2.0.0rc1 - 2024-01-XX
 
 ### Added
 
@@ -14,7 +14,7 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 ### Changed
 
-- Moved `s3pypi` command to `s3pypi upload`.
+- Moved default command to `s3pypi upload`.
 
 ### Removed
 

@@ -106,3 +106,31 @@ def test_main_upload_package_with_force_updates_hash(chdir, data_dir, s3_bucket)
             "sha256", "c5a2633aecf5adc5ae49b868e12faf01f2199b914d4296399b52dec62cb70fb3"
         ),
     }
+
+
+def test_main_delete_package(chdir, data_dir, s3_bucket):
+    with chdir(data_dir):
+        s3pypi("upload", "dists/*", "--bucket", s3_bucket.name, "--put-root-index")
+        s3pypi("delete", "hello-world", "0.1.0", "--bucket", s3_bucket.name)
+
+    def read(key: str) -> bytes:
+        return s3_bucket.Object(key).get()["Body"].read()
+
+    root_index = read("index.html").decode()
+
+    def assert_pkg_exists(pkg: str, filename: str):
+        path = f"{pkg}/"
+        assert read(path + filename)
+        assert f">{filename}</a>" in read(path).decode()
+        assert f">{pkg}</a>" in root_index
+
+    for deleted_key in [
+        "hello-world/",
+        "hello-world/hello_world-0.1.0-py3-none-any.whl",
+    ]:
+        with pytest.raises(s3_bucket.meta.client.exceptions.NoSuchKey):
+            s3_bucket.Object(deleted_key).get()
+
+    assert ">hello-world</a>" not in root_index
+    assert_pkg_exists("foo", "foo-0.1.0.tar.gz")
+    assert_pkg_exists("xyz", "xyz-0.1.0.zip")

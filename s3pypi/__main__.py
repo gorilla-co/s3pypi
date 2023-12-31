@@ -21,9 +21,7 @@ def build_arg_parser() -> ArgumentParser:
     p.add_argument("-V", "--version", action="version", version=__version__)
     p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
 
-    commands = p.add_subparsers(help="Commands")
-    commands.required = True
-    p.set_defaults(func=None)
+    commands = p.add_subparsers(help="Commands", required=True)
 
     def add_command(
         func: Callable[[core.Config, Namespace], None], help: str
@@ -41,6 +39,11 @@ def build_arg_parser() -> ArgumentParser:
         help="The distribution files to upload to S3. Usually `dist/*`.",
     )
     build_s3_args(up)
+    up.add_argument(
+        "--put-root-index",
+        action="store_true",
+        help="Write a root index that lists all available package names.",
+    )
     g = up.add_mutually_exclusive_group()
     g.add_argument(
         "--strict",
@@ -98,15 +101,16 @@ def build_s3_args(p: ArgumentParser) -> None:
             "This ensures that concurrent invocations of s3pypi do not overwrite each other's changes."
         ),
     )
-    p.add_argument(
-        "--put-root-index",
-        action="store_true",
-        help="Write a root index that lists all available package names.",
-    )
 
 
 def upload(cfg: core.Config, args: Namespace) -> None:
-    core.upload_packages(cfg, args.dist, strict=args.strict, force=args.force)
+    core.upload_packages(
+        cfg,
+        args.dist,
+        put_root_index=args.put_root_index,
+        strict=args.strict,
+        force=args.force,
+    )
 
 
 def delete(cfg: core.Config, args: Namespace) -> None:
@@ -127,7 +131,6 @@ def main(*raw_args: str) -> None:
             no_sign_request=args.no_sign_request,
         ),
         lock_indexes=args.lock_indexes,
-        put_root_index=args.put_root_index,
         profile=args.profile,
         region=args.region,
     )

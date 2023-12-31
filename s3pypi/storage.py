@@ -76,3 +76,6 @@ class S3Storage:
                 ContentType="application/x-gzip",
                 **self.cfg.put_kwargs,  # type: ignore
             )
+
+    def delete(self, directory: str, filename: str) -> None:
+        self._object(directory, filename).delete()
