@@ -1,4 +1,3 @@
-from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -53,22 +52,14 @@ class S3Storage:
         return Index(dict.fromkeys(self._list_dirs()))
 
     def _list_dirs(self) -> List[str]:
-        results = set()
-        root = f"{p}/" if (p := self.cfg.prefix) else ""
-        todo = deque([root])
-        while todo:
-            current = todo.popleft()
-            if children := [
-                prefix
-                for item in self.s3.meta.client.get_paginator("list_objects_v2")
-                .paginate(Bucket=self.cfg.bucket, Delimiter="/", Prefix=current)
-                .search("CommonPrefixes")
-                if item and (prefix := item.get("Prefix"))
-            ]:
-                todo.extend(children)
-            else:
-                results.add(current[len(root) :])
-        return sorted(results)
+        prefix = f"{p}/" if (p := self.cfg.prefix) else ""
+        return [
+            d[len(prefix) :]
+            for item in self.s3.meta.client.get_paginator("list_objects_v2")
+            .paginate(Bucket=self.cfg.bucket, Delimiter="/", Prefix=prefix)
+            .search("CommonPrefixes")
+            if item and (d := item.get("Prefix"))
+        ]
 
     def put_index(self, directory: str, index: Index) -> None:
         self._object(directory, self.index_name).put(

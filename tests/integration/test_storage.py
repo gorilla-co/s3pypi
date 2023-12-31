@@ -60,10 +60,4 @@ def test_list_dirs(boto3_session, s3_bucket):
     cfg = S3Config(bucket=s3_bucket.name)
     s = S3Storage(boto3_session, cfg)
 
-    assert s._list_dirs() == [
-        "AA/one/",
-        "AA/three/",
-        "AA/two/",
-        "BBBB/xxx/",
-        "BBBB/yyy/",
-    ]
+    assert s._list_dirs() == ["AA/", "BBBB/"]
