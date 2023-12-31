@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 
+## 1.2.1 - 2023-12-31
+
+### Fixed
+
+- `--put-root-index` combined with `--prefix` builds the index page of that prefix.
+
+
 ## 1.2.0 - 2023-12-30
 
 ### Added

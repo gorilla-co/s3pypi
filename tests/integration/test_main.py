@@ -20,24 +20,29 @@ def test_string_dict(text, expected):
     assert string_dict(text) == expected
 
 
-def test_main_upload_package(chdir, data_dir, s3_bucket, dynamodb_table):
+@pytest.mark.parametrize("prefix", ["", "packages", "packages/abc"])
+def test_main_upload_package(chdir, data_dir, s3_bucket, dynamodb_table, prefix):
+    args = ["dists/*", "--bucket", s3_bucket.name, "--lock-indexes", "--put-root-index"]
+    if prefix:
+        args.extend(["--prefix", prefix])
+
     with chdir(data_dir):
-        dist = "dists/*"
-        s3pypi(dist, "--bucket", s3_bucket.name, "--lock-indexes", "--put-root-index")
+        s3pypi(*args)
 
     def read(key: str) -> bytes:
         return s3_bucket.Object(key).get()["Body"].read()
 
-    root_index = read("index.html").decode()
+    root_index = read(f"{prefix}/" if prefix else "index.html").decode()
 
-    def assert_pkg_exists(prefix: str, filename: str):
-        assert read(prefix + filename)
-        assert f">{filename}</a>" in read(prefix).decode()
-        assert f">{prefix.rstrip('/')}</a>" in root_index
+    def assert_pkg_exists(pkg: str, filename: str):
+        path = (f"{prefix}/" if prefix else "") + f"{pkg}/"
+        assert read(path + filename)
+        assert f">{filename}</a>" in read(path).decode()
+        assert f">{pkg}</a>" in root_index
 
-    assert_pkg_exists("foo/", "foo-0.1.0.tar.gz")
-    assert_pkg_exists("hello-world/", "hello_world-0.1.0-py3-none-any.whl")
-    assert_pkg_exists("xyz/", "xyz-0.1.0.zip")
+    assert_pkg_exists("foo", "foo-0.1.0.tar.gz")
+    assert_pkg_exists("hello-world", "hello_world-0.1.0-py3-none-any.whl")
+    assert_pkg_exists("xyz", "xyz-0.1.0.zip")
 
 
 def test_main_upload_package_exists(chdir, data_dir, s3_bucket, caplog):
