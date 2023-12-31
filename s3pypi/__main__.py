@@ -2,9 +2,9 @@ from __future__ import print_function
 
 import logging
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Dict
+from typing import Callable, Dict
 
 from s3pypi import __prog__, __version__, core
 
@@ -18,17 +18,58 @@ def string_dict(text: str) -> Dict[str, str]:
 
 def build_arg_parser() -> ArgumentParser:
     p = ArgumentParser(prog=__prog__)
-    p.add_argument(
+    p.add_argument("-V", "--version", action="version", version=__version__)
+    p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
+
+    commands = p.add_subparsers(help="Commands")
+    commands.required = True
+    p.set_defaults(func=None)
+
+    def add_command(
+        func: Callable[[core.Config, Namespace], None], help: str
+    ) -> ArgumentParser:
+        name = func.__name__.replace("_", "-")
+        cmd = commands.add_parser(name, help=help)
+        cmd.set_defaults(func=func)
+        return cmd
+
+    up = add_command(upload, help="Upload packages to S3.")
+    up.add_argument(
         "dist",
         nargs="+",
         type=Path,
         help="The distribution files to upload to S3. Usually `dist/*`.",
     )
+    build_s3_args(up)
+    g = up.add_mutually_exclusive_group()
+    g.add_argument(
+        "--strict",
+        action="store_true",
+        help="Fail when trying to upload existing files.",
+    )
+    g.add_argument(
+        "-f", "--force", action="store_true", help="Overwrite existing files."
+    )
+
+    d = add_command(delete, help="Delete packages from S3.")
+    d.add_argument("name", help="Package name.")
+    d.add_argument("version", help="Package version.")
+    build_s3_args(d)
+
+    return p
+
+
+def build_s3_args(p: ArgumentParser) -> None:
     p.add_argument("-b", "--bucket", required=True, help="The S3 bucket to upload to.")
+    p.add_argument("--prefix", help="Optional prefix to use for S3 object names.")
+
     p.add_argument("--profile", help="Optional AWS profile to use.")
     p.add_argument("--region", help="Optional AWS region to target.")
-    p.add_argument("--prefix", help="Optional prefix to use for S3 object names.")
-    p.add_argument("--acl", help="Optional canned ACL to use for S3 objects.")
+    p.add_argument(
+        "--no-sign-request",
+        action="store_true",
+        help="Don't use authentication when communicating with S3.",
+    )
     p.add_argument("--s3-endpoint-url", help="Optional custom S3 endpoint URL.")
     p.add_argument(
         "--s3-put-args",
@@ -36,7 +77,7 @@ def build_arg_parser() -> ArgumentParser:
         default={},
         help=(
             "Optional extra arguments to S3 PutObject calls. Example: "
-            "'ServerSideEncryption=aws:kms,SSEKMSKeyId=1234...'"
+            "'ACL=public-read,ServerSideEncryption=aws:kms,SSEKMSKeyId=1234...'"
         ),
     )
     p.add_argument(
@@ -50,7 +91,6 @@ def build_arg_parser() -> ArgumentParser:
         ),
     )
     p.add_argument(
-        "-l",
         "--lock-indexes",
         action="store_true",
         help=(
@@ -63,25 +103,14 @@ def build_arg_parser() -> ArgumentParser:
         action="store_true",
         help="Write a root index that lists all available package names.",
     )
-    p.add_argument(
-        "--no-sign-request",
-        action="store_true",
-        help="Don't use authentication when communicating with S3.",
-    )
 
-    g = p.add_mutually_exclusive_group()
-    g.add_argument(
-        "--strict",
-        action="store_true",
-        help="Fail when trying to upload existing files.",
-    )
-    g.add_argument(
-        "-f", "--force", action="store_true", help="Overwrite existing files."
-    )
 
-    p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
-    p.add_argument("-V", "--version", action="version", version=__version__)
-    return p
+def upload(cfg: core.Config, args: Namespace) -> None:
+    core.upload_packages(cfg, args.dist, strict=args.strict, force=args.force)
+
+
+def delete(cfg: core.Config, args: Namespace) -> None:
+    core.delete_package(cfg, name=args.name, version=args.version)
 
 
 def main(*raw_args: str) -> None:
@@ -89,7 +118,6 @@ def main(*raw_args: str) -> None:
     log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
 
     cfg = core.Config(
-        dist=args.dist,
         s3=core.S3Config(
             bucket=args.bucket,
             prefix=args.prefix,
@@ -98,18 +126,14 @@ def main(*raw_args: str) -> None:
             unsafe_s3_website=args.unsafe_s3_website,
             no_sign_request=args.no_sign_request,
         ),
-        strict=args.strict,
-        force=args.force,
         lock_indexes=args.lock_indexes,
         put_root_index=args.put_root_index,
         profile=args.profile,
         region=args.region,
     )
-    if args.acl:
-        cfg.s3.put_kwargs["ACL"] = args.acl
 
     try:
-        core.upload_packages(cfg)
+        args.func(cfg, args)
     except core.S3PyPiError as e:
         sys.exit(f"ERROR: {e}")
 

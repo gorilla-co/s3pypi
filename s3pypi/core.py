@@ -24,10 +24,7 @@ PackageMetadata = email.message.Message
 
 @dataclass
 class Config:
-    dist: List[Path]
     s3: S3Config
-    strict: bool = False
-    force: bool = False
     lock_indexes: bool = False
     put_root_index: bool = False
     profile: Optional[str] = None
@@ -45,7 +42,9 @@ def normalize_package_name(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name.lower())
 
 
-def upload_packages(cfg: Config) -> None:
+def upload_packages(
+    cfg: Config, dist: List[Path], strict: bool = False, force: bool = False
+) -> None:
     session = boto3.Session(profile_name=cfg.profile, region_name=cfg.region)
     storage = S3Storage(session, cfg.s3)
     lock = (
@@ -54,7 +53,7 @@ def upload_packages(cfg: Config) -> None:
         else DummyLocker()
     )
 
-    distributions = parse_distributions(cfg.dist)
+    distributions = parse_distributions(dist)
     get_name = attrgetter("name")
     existing_files = []
 
@@ -66,7 +65,7 @@ def upload_packages(cfg: Config) -> None:
             for distr in group:
                 filename = distr.local_path.name
 
-                if not cfg.force and filename in index.filenames:
+                if not force and filename in index.filenames:
                     existing_files.append(filename)
                     msg = "%s already exists! (use --force to overwrite)"
                     log.warning(msg, filename)
@@ -82,7 +81,7 @@ def upload_packages(cfg: Config) -> None:
             index = storage.build_root_index()
             storage.put_index(storage.root, index)
 
-    if cfg.strict and existing_files:
+    if strict and existing_files:
         raise S3PyPiError(f"Found {len(existing_files)} existing files on S3")
 
 
@@ -133,3 +132,7 @@ def extract_wheel_metadata(path: Path) -> PackageMetadata:
             raise S3PyPiError(f"No wheel metadata found in {path}") from None
 
     return email.message_from_string(text)
+
+
+def delete_package(cfg: Config, name: str, version: str) -> None:
+    raise NotImplementedError("Deleting packages is not implemented")

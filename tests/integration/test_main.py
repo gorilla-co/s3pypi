@@ -27,7 +27,7 @@ def test_main_upload_package(chdir, data_dir, s3_bucket, dynamodb_table, prefix)
         args.extend(["--prefix", prefix])
 
     with chdir(data_dir):
-        s3pypi(*args)
+        s3pypi("upload", *args)
 
     def read(key: str) -> bytes:
         return s3_bucket.Object(key).get()["Body"].read()
@@ -49,13 +49,13 @@ def test_main_upload_package_exists(chdir, data_dir, s3_bucket, caplog):
     dist = "dists/foo-0.1.0.tar.gz"
 
     with chdir(data_dir):
-        s3pypi(dist, "--bucket", s3_bucket.name)
-        s3pypi(dist, "--bucket", s3_bucket.name)
+        s3pypi("upload", dist, "--bucket", s3_bucket.name)
+        s3pypi("upload", dist, "--bucket", s3_bucket.name)
 
         with pytest.raises(SystemExit, match="ERROR: Found 1 existing files on S3"):
-            s3pypi(dist, "--strict", "--bucket", s3_bucket.name)
+            s3pypi("upload", dist, "--strict", "--bucket", s3_bucket.name)
 
-        s3pypi(dist, "--force", "--bucket", s3_bucket.name)
+        s3pypi("upload", dist, "--force", "--bucket", s3_bucket.name)
 
     msg = "foo-0.1.0.tar.gz already exists! (use --force to overwrite)"
     success = (__prog__, logging.INFO, "Uploading " + dist)
@@ -80,7 +80,7 @@ def test_main_upload_package_invalid(
 ):
     with chdir(data_dir):
         with pytest.raises(SystemExit, match=f"ERROR: {error_msg}"):
-            s3pypi(*dists, "--bucket", s3_bucket.name)
+            s3pypi("upload", *dists, "--bucket", s3_bucket.name)
 
 
 def test_main_upload_package_with_force_updates_hash(chdir, data_dir, s3_bucket):
@@ -98,7 +98,7 @@ def test_main_upload_package_with_force_updates_hash(chdir, data_dir, s3_bucket)
 
     with chdir(data_dir):
         dist = "dists/hello_world-0.1.0-py3-none-any.whl"
-        s3pypi(dist, "--force", "--bucket", s3_bucket.name)
+        s3pypi("upload", dist, "--force", "--bucket", s3_bucket.name)
 
     assert get_index().filenames == {
         "hello-world-0.1.0.tar.gz": None,

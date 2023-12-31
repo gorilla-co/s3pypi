@@ -151,7 +151,7 @@ You can now use `s3pypi` to upload packages to S3:
 $ cd /path/to/your-project/
 $ python setup.py sdist bdist_wheel
 
-$ s3pypi dist/* --bucket example-bucket [--prefix PREFIX] [--acl ACL]
+$ s3pypi upload dist/* --bucket example-bucket [--prefix PREFIX]
 ```
 
 See `s3pypi --help` for a description of all options.
