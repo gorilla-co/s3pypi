@@ -1,6 +1,7 @@
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Iterator, List, Optional
 
 import boto3
 import botocore
@@ -8,6 +9,7 @@ from botocore.config import Config as BotoConfig
 from mypy_boto3_s3.service_resource import Object
 
 from s3pypi.index import Index
+from s3pypi.locking import DummyLocker, DynamoDBLocker
 
 
 @dataclass
@@ -18,20 +20,31 @@ class S3Config:
     put_kwargs: Dict[str, str] = field(default_factory=dict)
     unsafe_s3_website: bool = False
     no_sign_request: bool = False
+    lock_indexes: bool = False
+    profile: Optional[str] = None
+    region: Optional[str] = None
 
 
 class S3Storage:
     root = "/"
     _index = "index.html"
 
-    def __init__(self, session: boto3.session.Session, cfg: S3Config):
-        _config = None
-        if cfg.no_sign_request:
-            _config = BotoConfig(signature_version=botocore.session.UNSIGNED)  # type: ignore
+    def __init__(self, cfg: S3Config):
+        session = boto3.Session(profile_name=cfg.profile, region_name=cfg.region)
 
-        self.s3 = session.resource("s3", endpoint_url=cfg.endpoint_url, config=_config)
+        config = None
+        if cfg.no_sign_request:
+            config = BotoConfig(signature_version=botocore.session.UNSIGNED)  # type: ignore
+
+        self.s3 = session.resource("s3", endpoint_url=cfg.endpoint_url, config=config)
         self.index_name = self._index if cfg.unsafe_s3_website else ""
         self.cfg = cfg
+
+        self.lock = (
+            DynamoDBLocker(session, table=f"{cfg.bucket}-locks")
+            if cfg.lock_indexes
+            else DummyLocker()
+        )
 
     def _object(self, directory: str, filename: str) -> Object:
         parts = [directory, filename]
@@ -48,10 +61,18 @@ class S3Storage:
             return Index()
         return Index.parse(html.decode())
 
-    def build_root_index(self) -> Index:
-        return Index(dict.fromkeys(self._list_dirs()))
+    @contextmanager
+    def locked_index(self, directory: str) -> Iterator[Index]:
+        with self.lock(directory):
+            index = self.get_index(directory)
+            yield index
 
-    def _list_dirs(self) -> List[str]:
+            if index.filenames:
+                self.put_index(directory, index)
+            else:
+                self.delete(directory, self.index_name)
+
+    def list_directories(self) -> List[str]:
         prefix = f"{p}/" if (p := self.cfg.prefix) else ""
         return [
             d[len(prefix) :]

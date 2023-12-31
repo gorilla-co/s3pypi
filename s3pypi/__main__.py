@@ -129,10 +129,10 @@ def main(*raw_args: str) -> None:
             put_kwargs=args.s3_put_args,
             unsafe_s3_website=args.unsafe_s3_website,
             no_sign_request=args.no_sign_request,
+            lock_indexes=args.lock_indexes,
+            profile=args.profile,
+            region=args.region,
         ),
-        lock_indexes=args.lock_indexes,
-        profile=args.profile,
-        region=args.region,
     )
 
     try:
