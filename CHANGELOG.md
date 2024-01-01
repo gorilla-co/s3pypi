@@ -19,7 +19,9 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 ### Removed
 
-- `--acl` option. Use `--s3-put-args='ACL=...'` instead.
+- `--acl` option. Use `--s3-put-args='ACL=...'` instead. [The use of ACLs is discouraged].
+
+[The use of ACLs is discouraged]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/about-object-ownership.html
 
 
 ## 1.2.1 - 2023-12-31
@@ -62,8 +64,7 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 ### Added
 
-- SHA-256 checksums of packages to URLs. [@andrei-shabanski](https://github.com/andrei-
-  shabanski)
+- SHA-256 checksums in URLs. [@andrei-shabanski](https://github.com/andrei-shabanski)
 - `--no-sign-request` option to disable S3 authentication.
   [@jaustinpage](https://github.com/jaustinpage)
 - Expand glob patterns in case they were not expanded by a shell.
