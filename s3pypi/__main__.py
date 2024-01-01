@@ -2,9 +2,9 @@ from __future__ import print_function
 
 import logging
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Dict
+from typing import Callable, Dict
 
 from s3pypi import __prog__, __version__, core
 
@@ -18,58 +18,33 @@ def string_dict(text: str) -> Dict[str, str]:
 
 def build_arg_parser() -> ArgumentParser:
     p = ArgumentParser(prog=__prog__)
-    p.add_argument(
+    p.add_argument("-V", "--version", action="version", version=__version__)
+    p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
+
+    commands = p.add_subparsers(help="Commands", required=True)
+
+    def add_command(
+        func: Callable[[core.Config, Namespace], None], help: str
+    ) -> ArgumentParser:
+        name = func.__name__.replace("_", "-")
+        cmd = commands.add_parser(name, help=help)
+        cmd.set_defaults(func=func)
+        return cmd
+
+    up = add_command(upload, help="Upload packages to S3.")
+    up.add_argument(
         "dist",
         nargs="+",
         type=Path,
         help="The distribution files to upload to S3. Usually `dist/*`.",
     )
-    p.add_argument("-b", "--bucket", required=True, help="The S3 bucket to upload to.")
-    p.add_argument("--profile", help="Optional AWS profile to use.")
-    p.add_argument("--region", help="Optional AWS region to target.")
-    p.add_argument("--prefix", help="Optional prefix to use for S3 object names.")
-    p.add_argument("--acl", help="Optional canned ACL to use for S3 objects.")
-    p.add_argument("--s3-endpoint-url", help="Optional custom S3 endpoint URL.")
-    p.add_argument(
-        "--s3-put-args",
-        type=string_dict,
-        default={},
-        help=(
-            "Optional extra arguments to S3 PutObject calls. Example: "
-            "'ServerSideEncryption=aws:kms,SSEKMSKeyId=1234...'"
-        ),
-    )
-    p.add_argument(
-        "--unsafe-s3-website",
-        action="store_true",
-        help=(
-            "Store the index as an S3 object named `<package>/index.html` instead of `<package>/`. "
-            "This option is provided for backwards compatibility with S3 website endpoints, "
-            "the use of which is discouraged because they require the bucket to be publicly accessible. "
-            "It's recommended to instead use a private S3 bucket with a CloudFront Origin Access Identity."
-        ),
-    )
-    p.add_argument(
-        "-l",
-        "--lock-indexes",
-        action="store_true",
-        help=(
-            "Lock index objects in S3 using a DynamoDB table named `<bucket>-locks`. "
-            "This ensures that concurrent invocations of s3pypi do not overwrite each other's changes."
-        ),
-    )
-    p.add_argument(
+    build_s3_args(up)
+    up.add_argument(
         "--put-root-index",
         action="store_true",
         help="Write a root index that lists all available package names.",
     )
-    p.add_argument(
-        "--no-sign-request",
-        action="store_true",
-        help="Don't use authentication when communicating with S3.",
-    )
-
-    g = p.add_mutually_exclusive_group()
+    g = up.add_mutually_exclusive_group()
     g.add_argument(
         "--strict",
         action="store_true",
@@ -79,9 +54,69 @@ def build_arg_parser() -> ArgumentParser:
         "-f", "--force", action="store_true", help="Overwrite existing files."
     )
 
-    p.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
-    p.add_argument("-V", "--version", action="version", version=__version__)
+    d = add_command(delete, help="Delete packages from S3.")
+    d.add_argument("name", help="Package name.")
+    d.add_argument("version", help="Package version.")
+    build_s3_args(d)
+
     return p
+
+
+def build_s3_args(p: ArgumentParser) -> None:
+    p.add_argument("-b", "--bucket", required=True, help="The S3 bucket to upload to.")
+    p.add_argument("--prefix", help="Optional prefix to use for S3 object names.")
+
+    p.add_argument("--profile", help="Optional AWS profile to use.")
+    p.add_argument("--region", help="Optional AWS region to target.")
+    p.add_argument(
+        "--no-sign-request",
+        action="store_true",
+        help="Don't use authentication when communicating with S3.",
+    )
+    p.add_argument(
+        "--s3-endpoint-url", metavar="URL", help="Optional custom S3 endpoint URL."
+    )
+    p.add_argument(
+        "--s3-put-args",
+        metavar="ARGS",
+        type=string_dict,
+        default={},
+        help=(
+            "Optional extra arguments to S3 PutObject calls. Example: "
+            "'ACL=public-read,ServerSideEncryption=aws:kms,SSEKMSKeyId=1234...'"
+        ),
+    )
+    p.add_argument(
+        "--index.html",
+        dest="index_html",
+        action="store_true",
+        help=(
+            "Store index pages with suffix `/index.html` instead of `/`. "
+            "This provides compatibility with custom HTTPS proxies or S3 website endpoints."
+        ),
+    )
+    p.add_argument(
+        "--lock-indexes",
+        action="store_true",
+        help=(
+            "Lock index objects in S3 using a DynamoDB table named `<bucket>-locks`. "
+            "This ensures that concurrent invocations of s3pypi do not overwrite each other's changes."
+        ),
+    )
+
+
+def upload(cfg: core.Config, args: Namespace) -> None:
+    core.upload_packages(
+        cfg,
+        args.dist,
+        put_root_index=args.put_root_index,
+        strict=args.strict,
+        force=args.force,
+    )
+
+
+def delete(cfg: core.Config, args: Namespace) -> None:
+    core.delete_package(cfg, name=args.name, version=args.version)
 
 
 def main(*raw_args: str) -> None:
@@ -89,27 +124,21 @@ def main(*raw_args: str) -> None:
     log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
 
     cfg = core.Config(
-        dist=args.dist,
         s3=core.S3Config(
             bucket=args.bucket,
             prefix=args.prefix,
+            profile=args.profile,
+            region=args.region,
+            no_sign_request=args.no_sign_request,
             endpoint_url=args.s3_endpoint_url,
             put_kwargs=args.s3_put_args,
-            unsafe_s3_website=args.unsafe_s3_website,
-            no_sign_request=args.no_sign_request,
+            index_html=args.index_html,
+            lock_indexes=args.lock_indexes,
         ),
-        strict=args.strict,
-        force=args.force,
-        lock_indexes=args.lock_indexes,
-        put_root_index=args.put_root_index,
-        profile=args.profile,
-        region=args.region,
     )
-    if args.acl:
-        cfg.s3.put_kwargs["ACL"] = args.acl
 
     try:
-        core.upload_packages(cfg)
+        args.func(cfg, args)
     except core.S3PyPiError as e:
         sys.exit(f"ERROR: {e}")
 

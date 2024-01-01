@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 
+## 2.0.0 - 2024-XX-XX
+
+### Added
+
+- `s3pypi delete` command to delete packages from S3.
+
+### Changed
+
+- Moved default command to `s3pypi upload`.
+- Renamed `--unsafe-s3-website` option to `--index.html`.
+
+### Removed
+
+- `--acl` option. Use `--s3-put-args='ACL=...'` instead. [The use of ACLs is discouraged].
+
+[The use of ACLs is discouraged]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/about-object-ownership.html
+
+
 ## 1.2.1 - 2023-12-31
 
 ### Fixed
@@ -46,8 +64,7 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 
 ### Added
 
-- SHA-256 checksums of packages to URLs. [@andrei-shabanski](https://github.com/andrei-
-  shabanski)
+- SHA-256 checksums in URLs. [@andrei-shabanski](https://github.com/andrei-shabanski)
 - `--no-sign-request` option to disable S3 authentication.
   [@jaustinpage](https://github.com/jaustinpage)
 - Expand glob patterns in case they were not expanded by a shell.

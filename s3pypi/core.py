@@ -6,15 +6,12 @@ from dataclasses import dataclass
 from itertools import groupby
 from operator import attrgetter
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 from zipfile import ZipFile
-
-import boto3
 
 from s3pypi import __prog__
 from s3pypi.exceptions import S3PyPiError
 from s3pypi.index import Hash
-from s3pypi.locking import DummyLocker, DynamoDBLocker
 from s3pypi.storage import S3Config, S3Storage
 
 log = logging.getLogger(__prog__)
@@ -24,14 +21,7 @@ PackageMetadata = email.message.Message
 
 @dataclass
 class Config:
-    dist: List[Path]
     s3: S3Config
-    strict: bool = False
-    force: bool = False
-    lock_indexes: bool = False
-    put_root_index: bool = False
-    profile: Optional[str] = None
-    region: Optional[str] = None
 
 
 @dataclass
@@ -45,28 +35,27 @@ def normalize_package_name(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name.lower())
 
 
-def upload_packages(cfg: Config) -> None:
-    session = boto3.Session(profile_name=cfg.profile, region_name=cfg.region)
-    storage = S3Storage(session, cfg.s3)
-    lock = (
-        DynamoDBLocker(session, table=f"{cfg.s3.bucket}-locks")
-        if cfg.lock_indexes
-        else DummyLocker()
-    )
+def upload_packages(
+    cfg: Config,
+    dist: List[Path],
+    put_root_index: bool = False,
+    strict: bool = False,
+    force: bool = False,
+) -> None:
+    storage = S3Storage(cfg.s3)
+    distributions = parse_distributions(dist)
 
-    distributions = parse_distributions(cfg.dist)
     get_name = attrgetter("name")
     existing_files = []
 
     for name, group in groupby(sorted(distributions, key=get_name), get_name):
         directory = normalize_package_name(name)
-        with lock(directory):
-            index = storage.get_index(directory)
 
+        with storage.locked_index(directory) as index:
             for distr in group:
                 filename = distr.local_path.name
 
-                if not cfg.force and filename in index.filenames:
+                if not force and filename in index.filenames:
                     existing_files.append(filename)
                     msg = "%s already exists! (use --force to overwrite)"
                     log.warning(msg, filename)
@@ -75,14 +64,11 @@ def upload_packages(cfg: Config) -> None:
                     storage.put_distribution(directory, distr.local_path)
                     index.filenames[filename] = Hash.of("sha256", distr.local_path)
 
-            storage.put_index(directory, index)
+    if put_root_index:
+        with storage.locked_index(storage.root) as root_index:
+            root_index.filenames = dict.fromkeys(storage.list_directories())
 
-    if cfg.put_root_index:
-        with lock(storage.root):
-            index = storage.build_root_index()
-            storage.put_index(storage.root, index)
-
-    if cfg.strict and existing_files:
+    if strict and existing_files:
         raise S3PyPiError(f"Found {len(existing_files)} existing files on S3")
 
 
@@ -133,3 +119,22 @@ def extract_wheel_metadata(path: Path) -> PackageMetadata:
             raise S3PyPiError(f"No wheel metadata found in {path}") from None
 
     return email.message_from_string(text)
+
+
+def delete_package(cfg: Config, name: str, version: str) -> None:
+    storage = S3Storage(cfg.s3)
+    directory = normalize_package_name(name)
+
+    with storage.locked_index(directory) as index:
+        filenames = [f for f in index.filenames if f.split("-", 2)[1] == version]
+        if not filenames:
+            raise S3PyPiError(f"Package not found: {name} {version}")
+
+        for filename in filenames:
+            log.info("Deleting %s", filename)
+            storage.delete(directory, filename)
+            del index.filenames[filename]
+
+    if not index.filenames:
+        with storage.locked_index(storage.root) as root_index:
+            root_index.filenames.pop(directory, None)

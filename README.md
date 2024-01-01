@@ -138,6 +138,13 @@ be renamed to `<package>/`. You can do so using the provided script:
 $ scripts/migrate-s3-index.py example-bucket
 ```
 
+To instead keep using the old configuration with a publicly accessible S3
+website endpoint, pass the following options when uploading packages:
+
+```console
+$ s3pypi upload ... --index.html --s3-put-args='ACL=public-read'
+```
+
 [Origin Access Identity (OAI)]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
 
 
@@ -151,7 +158,7 @@ You can now use `s3pypi` to upload packages to S3:
 $ cd /path/to/your-project/
 $ python setup.py sdist bdist_wheel
 
-$ s3pypi dist/* --bucket example-bucket [--prefix PREFIX] [--acl ACL]
+$ s3pypi upload dist/* --bucket example-bucket [--prefix PREFIX]
 ```
 
 See `s3pypi --help` for a description of all options.
