@@ -170,6 +170,45 @@ $ s3pypi upload ... --index.html --s3-put-args='ACL=public-read'
 [Origin Access Identity (OAI)]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
 
 
+### Example IAM policy
+
+The `s3pypi` CLI requires the following IAM permissions to access S3 and
+(optionally) DynamoDB. Replace `example-bucket` by your S3 bucket name.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::example-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::example-bucket"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:*:*:table/example-bucket-locks"
+    }
+  ]
+}
+```
+
+
 ## Usage
 
 ### Distributing packages
