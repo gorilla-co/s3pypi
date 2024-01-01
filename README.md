@@ -3,6 +3,28 @@
 S3PyPI is a CLI for creating a Python Package Repository in an S3 bucket.
 
 
+## Why?
+
+The official [Python Package Index (PyPI)](https://pypi.org) is a public
+repository of Python software. It's used by `pip` to download packages.
+
+If you work at a company, you may wish to publish your packages somewhere
+private instead, and still have them be accessible via `pip install`. This
+requires hosting your own repository.
+
+S3PyPI enables hosting a private repository at a low cost. It requires only an
+[S3 bucket] for storage, and some way to serve files over HTTPS (e.g. [Amazon
+CloudFront]).
+
+Publishing packages and index pages to S3 is done using the `s3pypi` CLI.
+Creating the S3 bucket and CloudFront distribution is done using a provided
+[Terraform] configuration, which you can tailor to your own needs.
+
+[S3 bucket]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html
+[Amazon CloudFront]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
+[Terraform]: https://www.terraform.io/
+
+
 ## Alternatives
 
 - [AWS CodeArtifact](https://aws.amazon.com/codeartifact/) is a fully managed
@@ -24,8 +46,8 @@ $ pip install s3pypi
 
 Before you can start using `s3pypi`, you must set up an S3 bucket for storing
 packages, and a CloudFront distribution for serving files over HTTPS. Both of
-these can be created using the [Terraform](https://www.terraform.io/)
-configuration provided in the `terraform/` directory:
+these can be created using the [Terraform] configuration provided in the
+`terraform/` directory:
 
 ```console
 $ git clone https://github.com/gorilla-co/s3pypi.git
