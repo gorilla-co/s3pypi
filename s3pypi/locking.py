@@ -1,8 +1,10 @@
 import abc
 import datetime as dt
+import getpass
 import hashlib
 import json
 import logging
+import socket
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -66,7 +68,7 @@ class DynamoDBLocker(Locker):
                 log.debug("No locks table found. Locking disabled.")
                 return DummyLocker()
 
-        owner = session.client("sts").get_caller_identity()["Arn"]
+        owner = f"{getpass.getuser()}@{socket.gethostname()}"
         return DynamoDBLocker(table, owner, cfg)
 
     def __init__(self, table: Table, owner: str, cfg: LockerConfig):
