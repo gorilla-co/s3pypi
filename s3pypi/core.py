@@ -9,9 +9,12 @@ from pathlib import Path
 from typing import List
 from zipfile import ZipFile
 
+import boto3
+
 from s3pypi import __prog__
 from s3pypi.exceptions import S3PyPiError
 from s3pypi.index import Hash
+from s3pypi.locking import DynamoDBLocker
 from s3pypi.storage import S3Config, S3Storage
 
 log = logging.getLogger(__prog__)
@@ -138,3 +141,9 @@ def delete_package(cfg: Config, name: str, version: str) -> None:
     if not index.filenames:
         with storage.locked_index(storage.root) as root_index:
             root_index.filenames.pop(directory, None)
+
+
+def force_unlock(cfg: Config, table: str, lock_id: str) -> None:
+    session = boto3.Session(profile_name=cfg.s3.profile, region_name=cfg.s3.region)
+    DynamoDBLocker.build(session, table)._unlock(lock_id)
+    log.info("Released lock %s", lock_id)

@@ -103,10 +103,9 @@ class DynamoDBLocker(Locker):
 
 class DynamoDBLockTimeoutError(exc.S3PyPiError):
     def __init__(self, table: str, item: dict):
-        key = json.dumps({"LockID": {"S": item["LockID"]}})
         super().__init__(
             f"Timed out trying to acquire lock:\n\n{json.dumps(item, indent=2)}\n\n"
             "Another instance of s3pypi may currently be holding the lock.\n"
             "If this is not the case, you may release the lock as follows:\n\n"
-            f"$ aws dynamodb delete-item --table-name {table} --key '{key}'\n"
+            f"$ s3pypi force-unlock {table} {item['LockID']}\n"
         )

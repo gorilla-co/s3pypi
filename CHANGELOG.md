@@ -11,7 +11,8 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 ### Added
 
 - `s3pypi delete` command to delete packages from S3.
-- `--locks-table` to customise the DynamoDB table name used for locking.
+- `s3pypi force-unlock` command to release a stuck lock in DynamoDB.
+- `--locks-table` option to customise the DynamoDB table name used for locking.
 
 ### Changed
 

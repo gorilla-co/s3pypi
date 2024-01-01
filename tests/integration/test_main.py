@@ -134,3 +134,7 @@ def test_main_delete_package(chdir, data_dir, s3_bucket):
     assert ">hello-world</a>" not in root_index
     assert_pkg_exists("foo", "foo-0.1.0.tar.gz")
     assert_pkg_exists("xyz", "xyz-0.1.0.zip")
+
+
+def test_main_force_unlock(dynamodb_table):
+    s3pypi("force-unlock", dynamodb_table.name, "12345")
