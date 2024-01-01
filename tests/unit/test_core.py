@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 from s3pypi import core
@@ -18,20 +16,11 @@ def test_normalize_package_name(name, normalized):
 
 
 @pytest.mark.parametrize(
-    "dist",
+    "filename, dist",
     [
-        core.Distribution(
-            name="hello-world",
-            version="0.1.0",
-            local_path=Path("dist/hello-world-0.1.0.tar.gz"),
-        ),
-        core.Distribution(
-            name="foo-bar",
-            version="1.2.3",
-            local_path=Path("dist/foo-bar-1.2.3.zip"),
-        ),
+        ("hello_world-0.1.0.tar.gz", core.DistributionId("hello_world", "0.1.0")),
+        ("foo_bar-1.2.3-py3-none-any.whl", core.DistributionId("foo_bar", "1.2.3")),
     ],
 )
-def test_parse_distribution(dist):
-    path = dist.local_path
-    assert core.parse_distribution(path) == dist
+def test_parse_distribution_id(filename, dist):
+    assert core.parse_distribution_id(filename) == dist

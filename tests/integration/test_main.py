@@ -127,6 +127,7 @@ def test_main_delete_package(chdir, data_dir, s3_bucket):
     for deleted_key in [
         "hello-world/",
         "hello-world/hello_world-0.1.0-py3-none-any.whl",
+        "hello-world/hello_world-0.1.0.tar.gz",
     ]:
         with pytest.raises(s3_bucket.meta.client.exceptions.NoSuchKey):
             s3_bucket.Object(deleted_key).get()
