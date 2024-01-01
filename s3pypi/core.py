@@ -65,8 +65,8 @@ def upload_packages(
                     index.filenames[filename] = Hash.of("sha256", distr.local_path)
 
     if put_root_index:
-        with storage.locked_index(storage.root) as index:
-            index.filenames = dict.fromkeys(storage.list_directories())
+        with storage.locked_index(storage.root) as root_index:
+            root_index.filenames = dict.fromkeys(storage.list_directories())
 
     if strict and existing_files:
         raise S3PyPiError(f"Found {len(existing_files)} existing files on S3")
@@ -136,5 +136,5 @@ def delete_package(cfg: Config, name: str, version: str) -> None:
             del index.filenames[filename]
 
     if not index.filenames:
-        with storage.locked_index(storage.root) as index:
-            index.filenames.pop(directory, None)
+        with storage.locked_index(storage.root) as root_index:
+            root_index.filenames.pop(directory, None)
