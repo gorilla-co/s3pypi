@@ -96,12 +96,9 @@ def build_s3_args(p: ArgumentParser) -> None:
         ),
     )
     p.add_argument(
-        "--lock-indexes",
-        action="store_true",
-        help=(
-            "Lock index objects in S3 using a DynamoDB table named `<bucket>-locks`. "
-            "This ensures that concurrent invocations of s3pypi do not overwrite each other's changes."
-        ),
+        "--locks-table",
+        metavar="TABLE",
+        help="DynamoDB table to use for locking (default: `<bucket>-locks`).",
     )
 
 
@@ -133,7 +130,7 @@ def main(*raw_args: str) -> None:
             endpoint_url=args.s3_endpoint_url,
             put_kwargs=args.s3_put_args,
             index_html=args.index_html,
-            lock_indexes=args.lock_indexes,
+            locks_table=args.locks_table,
         ),
     )
 

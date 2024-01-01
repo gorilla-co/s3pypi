@@ -9,7 +9,7 @@ from botocore.config import Config as BotoConfig
 from mypy_boto3_s3.service_resource import Object
 
 from s3pypi.index import Index
-from s3pypi.locking import DummyLocker, DynamoDBLocker
+from s3pypi.locking import DynamoDBLocker
 
 
 @dataclass
@@ -22,7 +22,7 @@ class S3Config:
     endpoint_url: Optional[str] = None
     put_kwargs: Dict[str, str] = field(default_factory=dict)
     index_html: bool = False
-    lock_indexes: bool = False
+    locks_table: Optional[str] = None
 
 
 class S3Storage:
@@ -40,10 +40,10 @@ class S3Storage:
         self.index_name = self._index if cfg.index_html else ""
         self.cfg = cfg
 
-        self.lock = (
-            DynamoDBLocker(session, table=f"{cfg.bucket}-locks")
-            if cfg.lock_indexes
-            else DummyLocker()
+        self.lock = DynamoDBLocker.build(
+            session,
+            table_name=cfg.locks_table or f"{cfg.bucket}-locks",
+            discover=not cfg.locks_table,
         )
 
     def _object(self, directory: str, filename: str) -> Object:

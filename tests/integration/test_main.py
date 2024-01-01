@@ -22,7 +22,7 @@ def test_string_dict(text, expected):
 
 @pytest.mark.parametrize("prefix", ["", "packages", "packages/abc"])
 def test_main_upload_package(chdir, data_dir, s3_bucket, dynamodb_table, prefix):
-    args = ["dists/*", "--bucket", s3_bucket.name, "--lock-indexes", "--put-root-index"]
+    args = ["dists/*", "--bucket", s3_bucket.name, "--put-root-index"]
     if prefix:
         args.extend(["--prefix", prefix])
 

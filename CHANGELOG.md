@@ -11,6 +11,7 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 ### Added
 
 - `s3pypi delete` command to delete packages from S3.
+- `--locks-table` to customise the DynamoDB table name used for locking.
 
 ### Changed
 
@@ -20,6 +21,7 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 ### Removed
 
 - `--acl` option. Use `--s3-put-args='ACL=...'` instead. [The use of ACLs is discouraged].
+- `--lock-indexes` option. Locking is enabled automatically if a DynamoDB table exists.
 
 [The use of ACLs is discouraged]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/about-object-ownership.html
 
