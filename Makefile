@@ -11,6 +11,9 @@ format:
 	poetry run isort --apply
 	poetry run black .
 
+profile:
+	poetry run pyinstrument -r html -m pytest tests/integration/test_main.py
+
 clean:
 	rm -rf .coverage .eggs/ .pytest_cache/ .tox/ \
 		build/ coverage/ dist/ pip-wheel-metadata/
