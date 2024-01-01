@@ -73,9 +73,12 @@ def build_s3_args(p: ArgumentParser) -> None:
         action="store_true",
         help="Don't use authentication when communicating with S3.",
     )
-    p.add_argument("--s3-endpoint-url", help="Optional custom S3 endpoint URL.")
+    p.add_argument(
+        "--s3-endpoint-url", metavar="URL", help="Optional custom S3 endpoint URL."
+    )
     p.add_argument(
         "--s3-put-args",
+        metavar="ARGS",
         type=string_dict,
         default={},
         help=(
@@ -84,13 +87,12 @@ def build_s3_args(p: ArgumentParser) -> None:
         ),
     )
     p.add_argument(
-        "--unsafe-s3-website",
+        "--index.html",
+        dest="index_html",
         action="store_true",
         help=(
-            "Store the index as an S3 object named `<package>/index.html` instead of `<package>/`. "
-            "This option is provided for backwards compatibility with S3 website endpoints, "
-            "the use of which is discouraged because they require the bucket to be publicly accessible. "
-            "It's recommended to instead use a private S3 bucket with a CloudFront Origin Access Identity."
+            "Store index pages with suffix `/index.html` instead of `/`. "
+            "This provides compatibility with custom HTTPS proxies or S3 website endpoints."
         ),
     )
     p.add_argument(
@@ -125,13 +127,13 @@ def main(*raw_args: str) -> None:
         s3=core.S3Config(
             bucket=args.bucket,
             prefix=args.prefix,
-            endpoint_url=args.s3_endpoint_url,
-            put_kwargs=args.s3_put_args,
-            unsafe_s3_website=args.unsafe_s3_website,
-            no_sign_request=args.no_sign_request,
-            lock_indexes=args.lock_indexes,
             profile=args.profile,
             region=args.region,
+            no_sign_request=args.no_sign_request,
+            endpoint_url=args.s3_endpoint_url,
+            put_kwargs=args.s3_put_args,
+            index_html=args.index_html,
+            lock_indexes=args.lock_indexes,
         ),
     )
 

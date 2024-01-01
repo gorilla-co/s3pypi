@@ -15,6 +15,7 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 ### Changed
 
 - Moved default command to `s3pypi upload`.
+- Renamed `--unsafe-s3-website` option to `--index.html`.
 
 ### Removed
 

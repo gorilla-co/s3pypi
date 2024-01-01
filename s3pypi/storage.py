@@ -16,13 +16,13 @@ from s3pypi.locking import DummyLocker, DynamoDBLocker
 class S3Config:
     bucket: str
     prefix: Optional[str] = None
-    endpoint_url: Optional[str] = None
-    put_kwargs: Dict[str, str] = field(default_factory=dict)
-    unsafe_s3_website: bool = False
-    no_sign_request: bool = False
-    lock_indexes: bool = False
     profile: Optional[str] = None
     region: Optional[str] = None
+    no_sign_request: bool = False
+    endpoint_url: Optional[str] = None
+    put_kwargs: Dict[str, str] = field(default_factory=dict)
+    index_html: bool = False
+    lock_indexes: bool = False
 
 
 class S3Storage:
@@ -37,7 +37,7 @@ class S3Storage:
             config = BotoConfig(signature_version=botocore.session.UNSIGNED)  # type: ignore
 
         self.s3 = session.resource("s3", endpoint_url=cfg.endpoint_url, config=config)
-        self.index_name = self._index if cfg.unsafe_s3_website else ""
+        self.index_name = self._index if cfg.index_html else ""
         self.cfg = cfg
 
         self.lock = (

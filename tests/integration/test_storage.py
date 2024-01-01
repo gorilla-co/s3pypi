@@ -27,8 +27,8 @@ index = object()
         (S3Config(""), "foo", "bar", "foo/bar"),
         (S3Config("", prefix="P"), "/", index, "P/"),
         (S3Config("", prefix="P"), "foo", "bar", "P/foo/bar"),
-        (S3Config("", prefix="P", unsafe_s3_website=True), "/", index, "P/index.html"),
-        (S3Config("", unsafe_s3_website=True), "/", index, "index.html"),
+        (S3Config("", prefix="P", index_html=True), "/", index, "P/index.html"),
+        (S3Config("", index_html=True), "/", index, "index.html"),
     ],
 )
 def test_s3_key(cfg, directory, filename, expected_key):
