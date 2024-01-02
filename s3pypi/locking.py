@@ -1,13 +1,17 @@
 import abc
 import datetime as dt
+import getpass
 import hashlib
 import json
 import logging
+import socket
 import time
 from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import Iterator
 
 import boto3
+from mypy_boto3_dynamodb.service_resource import Table
 
 from s3pypi import __prog__, exceptions as exc
 
@@ -40,30 +44,48 @@ class DummyLocker(Locker):
     _unlock = _lock
 
 
+@dataclass
+class LockerConfig:
+    retry_delay: int = 1
+    max_attempts: int = 10
+
+
 class DynamoDBLocker(Locker):
-    def __init__(
-        self,
+    @staticmethod
+    def build(
         session: boto3.session.Session,
-        table: str,
-        retry_delay: int = 1,
-        max_attempts: int = 10,
-    ):
+        table_name: str,
+        discover: bool = False,
+        cfg: LockerConfig = LockerConfig(),
+    ) -> Locker:
         db = session.resource("dynamodb")
-        self.table = db.Table(table)
+        table = db.Table(table_name)
+
+        if discover:
+            try:
+                table.get_item(Key={"LockID": "?"})
+            except table.meta.client.exceptions.ClientError:
+                log.debug("No locks table found. Locking disabled.")
+                return DummyLocker()
+
+        owner = f"{getpass.getuser()}@{socket.gethostname()}"
+        return DynamoDBLocker(table, owner, cfg)
+
+    def __init__(self, table: Table, owner: str, cfg: LockerConfig):
+        self.table = table
         self.exc = self.table.meta.client.exceptions
-        self.retry_delay = retry_delay
-        self.max_attempts = max_attempts
-        self.caller_id = session.client("sts").get_caller_identity()["Arn"]
+        self.owner = owner
+        self.cfg = cfg
 
     def _lock(self, lock_id: str) -> None:
-        for attempt in range(1, self.max_attempts + 1):
+        for attempt in range(1, self.cfg.max_attempts + 1):
             now = dt.datetime.now(dt.timezone.utc)
             try:
                 self.table.put_item(
                     Item={
                         "LockID": lock_id,
                         "AcquiredAt": now.isoformat(),
-                        "Owner": self.caller_id,
+                        "Owner": self.owner,
                     },
                     ConditionExpression="attribute_not_exists(LockID)",
                 )
@@ -71,8 +93,8 @@ class DynamoDBLocker(Locker):
             except self.exc.ConditionalCheckFailedException:
                 if attempt == 1:
                     log.info("Waiting to acquire lock... (%s)", lock_id)
-                if attempt < self.max_attempts:
-                    time.sleep(self.retry_delay)
+                if attempt < self.cfg.max_attempts:
+                    time.sleep(self.cfg.retry_delay)
 
         item = self.table.get_item(Key={"LockID": lock_id})["Item"]
         raise DynamoDBLockTimeoutError(self.table.name, item)
@@ -83,10 +105,9 @@ class DynamoDBLocker(Locker):
 
 class DynamoDBLockTimeoutError(exc.S3PyPiError):
     def __init__(self, table: str, item: dict):
-        key = json.dumps({"LockID": {"S": item["LockID"]}})
         super().__init__(
             f"Timed out trying to acquire lock:\n\n{json.dumps(item, indent=2)}\n\n"
             "Another instance of s3pypi may currently be holding the lock.\n"
             "If this is not the case, you may release the lock as follows:\n\n"
-            f"$ aws dynamodb delete-item --table-name {table} --key '{key}'\n"
+            f"$ s3pypi force-unlock {table} {item['LockID']}\n"
         )

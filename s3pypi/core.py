@@ -1,4 +1,3 @@
-import email
 import logging
 import re
 from contextlib import suppress
@@ -7,16 +6,16 @@ from itertools import groupby
 from operator import attrgetter
 from pathlib import Path
 from typing import List
-from zipfile import ZipFile
+
+import boto3
 
 from s3pypi import __prog__
 from s3pypi.exceptions import S3PyPiError
 from s3pypi.index import Hash
+from s3pypi.locking import DynamoDBLocker
 from s3pypi.storage import S3Config, S3Storage
 
 log = logging.getLogger(__prog__)
-
-PackageMetadata = email.message.Message
 
 
 @dataclass
@@ -25,9 +24,13 @@ class Config:
 
 
 @dataclass
-class Distribution:
+class DistributionId:
     name: str
     version: str
+
+
+@dataclass
+class Distribution(DistributionId):
     local_path: Path
 
 
@@ -73,19 +76,19 @@ def upload_packages(
 
 
 def parse_distribution(path: Path) -> Distribution:
+    d = parse_distribution_id(path.name)
+    return Distribution(d.name, d.version, path)
+
+
+def parse_distribution_id(filename: str) -> DistributionId:
     extensions = (".whl", ".tar.gz", ".tar.bz2", ".tar.xz", ".zip")
 
-    ext = next((ext for ext in extensions if path.name.endswith(ext)), "")
+    ext = next((ext for ext in extensions if filename.endswith(ext)), "")
     if not ext:
-        raise S3PyPiError(f"Unknown file type: {path}")
+        raise S3PyPiError(f"Unknown file type: {filename}")
 
-    if ext == ".whl":
-        meta = extract_wheel_metadata(path)
-        name, version = meta["Name"], meta["Version"]
-    else:
-        name, version = path.name[: -len(ext)].rsplit("-", 1)
-
-    return Distribution(name, version, path)
+    name, version = filename[: -len(ext)].split("-", 2)[:2]
+    return DistributionId(name, version)
 
 
 def parse_distributions(paths: List[Path]) -> List[Distribution]:
@@ -107,26 +110,16 @@ def parse_distributions(paths: List[Path]) -> List[Distribution]:
     return dists
 
 
-def extract_wheel_metadata(path: Path) -> PackageMetadata:
-    with ZipFile(path, "r") as whl:
-        try:
-            text = next(
-                whl.open(fname).read().decode()
-                for fname in whl.namelist()
-                if fname.endswith("METADATA")
-            )
-        except StopIteration:
-            raise S3PyPiError(f"No wheel metadata found in {path}") from None
-
-    return email.message_from_string(text)
-
-
 def delete_package(cfg: Config, name: str, version: str) -> None:
     storage = S3Storage(cfg.s3)
     directory = normalize_package_name(name)
 
     with storage.locked_index(directory) as index:
-        filenames = [f for f in index.filenames if f.split("-", 2)[1] == version]
+        filenames = [
+            filename
+            for filename in index.filenames
+            if parse_distribution_id(filename).version == version
+        ]
         if not filenames:
             raise S3PyPiError(f"Package not found: {name} {version}")
 
@@ -138,3 +131,9 @@ def delete_package(cfg: Config, name: str, version: str) -> None:
     if not index.filenames:
         with storage.locked_index(storage.root) as root_index:
             root_index.filenames.pop(directory, None)
+
+
+def force_unlock(cfg: Config, table: str, lock_id: str) -> None:
+    session = boto3.Session(profile_name=cfg.s3.profile, region_name=cfg.s3.region)
+    DynamoDBLocker.build(session, table)._unlock(lock_id)
+    log.info("Released lock %s", lock_id)

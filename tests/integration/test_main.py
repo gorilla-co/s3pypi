@@ -22,7 +22,7 @@ def test_string_dict(text, expected):
 
 @pytest.mark.parametrize("prefix", ["", "packages", "packages/abc"])
 def test_main_upload_package(chdir, data_dir, s3_bucket, dynamodb_table, prefix):
-    args = ["dists/*", "--bucket", s3_bucket.name, "--lock-indexes", "--put-root-index"]
+    args = ["dists/*", "--bucket", s3_bucket.name, "--put-root-index"]
     if prefix:
         args.extend(["--prefix", prefix])
 
@@ -127,6 +127,7 @@ def test_main_delete_package(chdir, data_dir, s3_bucket):
     for deleted_key in [
         "hello-world/",
         "hello-world/hello_world-0.1.0-py3-none-any.whl",
+        "hello-world/hello_world-0.1.0.tar.gz",
     ]:
         with pytest.raises(s3_bucket.meta.client.exceptions.NoSuchKey):
             s3_bucket.Object(deleted_key).get()
@@ -134,3 +135,7 @@ def test_main_delete_package(chdir, data_dir, s3_bucket):
     assert ">hello-world</a>" not in root_index
     assert_pkg_exists("foo", "foo-0.1.0.tar.gz")
     assert_pkg_exists("xyz", "xyz-0.1.0.zip")
+
+
+def test_main_force_unlock(dynamodb_table):
+    s3pypi("force-unlock", dynamodb_table.name, "12345")

@@ -59,15 +59,24 @@ def build_arg_parser() -> ArgumentParser:
     d.add_argument("version", help="Package version.")
     build_s3_args(d)
 
+    ul = add_command(force_unlock, help="Release a stuck lock in DynamoDB.")
+    ul.add_argument("table", help="DynamoDB table.")
+    ul.add_argument("lock_id", help="ID of the lock to release.")
+    build_aws_args(ul)
+
     return p
+
+
+def build_aws_args(p: ArgumentParser) -> None:
+    p.add_argument("--profile", help="Optional AWS profile to use.")
+    p.add_argument("--region", help="Optional AWS region to target.")
 
 
 def build_s3_args(p: ArgumentParser) -> None:
     p.add_argument("-b", "--bucket", required=True, help="The S3 bucket to upload to.")
     p.add_argument("--prefix", help="Optional prefix to use for S3 object names.")
 
-    p.add_argument("--profile", help="Optional AWS profile to use.")
-    p.add_argument("--region", help="Optional AWS region to target.")
+    build_aws_args(p)
     p.add_argument(
         "--no-sign-request",
         action="store_true",
@@ -96,12 +105,9 @@ def build_s3_args(p: ArgumentParser) -> None:
         ),
     )
     p.add_argument(
-        "--lock-indexes",
-        action="store_true",
-        help=(
-            "Lock index objects in S3 using a DynamoDB table named `<bucket>-locks`. "
-            "This ensures that concurrent invocations of s3pypi do not overwrite each other's changes."
-        ),
+        "--locks-table",
+        metavar="TABLE",
+        help="DynamoDB table to use for locking (default: `<bucket>-locks`).",
     )
 
 
@@ -119,6 +125,10 @@ def delete(cfg: core.Config, args: Namespace) -> None:
     core.delete_package(cfg, name=args.name, version=args.version)
 
 
+def force_unlock(cfg: core.Config, args: Namespace) -> None:
+    core.force_unlock(cfg, args.table, args.lock_id)
+
+
 def main(*raw_args: str) -> None:
     args = build_arg_parser().parse_args(raw_args or sys.argv[1:])
     log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
@@ -133,7 +143,13 @@ def main(*raw_args: str) -> None:
             endpoint_url=args.s3_endpoint_url,
             put_kwargs=args.s3_put_args,
             index_html=args.index_html,
-            lock_indexes=args.lock_indexes,
+            locks_table=args.locks_table,
+        )
+        if hasattr(args, "bucket")
+        else core.S3Config(
+            bucket="",
+            profile=args.profile,
+            region=args.region,
         ),
     )
 
