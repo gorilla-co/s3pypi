@@ -110,6 +110,15 @@ The Terraform configuration can also be included in your own project as a
 module:
 
 ```terraform
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
+}
+
 provider "aws" {
   region = "eu-west-1"
 }

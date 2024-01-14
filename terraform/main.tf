@@ -28,6 +28,12 @@ variable "use_wildcard_certificate" {
   description = "Use a wildcard certificate (*.example.com)"
 }
 
+variable "enable_dynamodb_locking" {
+  type        = bool
+  default     = false
+  description = "Create a DynamoDB table for locking"
+}
+
 variable "enable_basic_auth" {
   type        = bool
   default     = false
@@ -49,6 +55,7 @@ module "s3pypi" {
   bucket                   = var.bucket
   domain                   = var.domain
   use_wildcard_certificate = var.use_wildcard_certificate
+  enable_dynamodb_locking  = var.enable_dynamodb_locking
   enable_basic_auth        = var.enable_basic_auth
 
   providers = {
