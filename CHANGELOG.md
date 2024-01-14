@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 
+## 2.0.1 - 2024-01-14
+
+### Fixed
+
+- Correctly parse source distribution names with hyphens, since setuptools does not
+  produce normalised names. See
+  [pypa/setuptools#3593](https://github.com/pypa/setuptools/issues/3593).
+
+
 ## 2.0.0 - 2024-01-06
 
 ### Added

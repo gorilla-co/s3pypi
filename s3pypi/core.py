@@ -87,7 +87,14 @@ def parse_distribution_id(filename: str) -> DistributionId:
     if not ext:
         raise S3PyPiError(f"Unknown file type: {filename}")
 
-    name, version = filename[: -len(ext)].split("-", 2)[:2]
+    stem = filename[: -len(ext)]
+
+    if ext == ".whl":
+        name, version = stem.split("-", 2)[:2]
+    else:
+        name, version = stem.rsplit("-", 1)
+        name = name.replace("-", "_")
+
     return DistributionId(name, version)
 
 

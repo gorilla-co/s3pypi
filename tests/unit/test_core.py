@@ -18,6 +18,7 @@ def test_normalize_package_name(name, normalized):
 @pytest.mark.parametrize(
     "filename, dist",
     [
+        ("hello-world-0.1.0.tar.gz", core.DistributionId("hello_world", "0.1.0")),
         ("hello_world-0.1.0.tar.gz", core.DistributionId("hello_world", "0.1.0")),
         ("foo_bar-1.2.3-py3-none-any.whl", core.DistributionId("foo_bar", "1.2.3")),
     ],
