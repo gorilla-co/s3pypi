@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 from dataclasses import dataclass
+from functools import lru_cache
 
 import boto3
 
@@ -43,6 +44,7 @@ class User:
     password_salt: str
 
 
+@lru_cache(maxsize=1024)
 def get_user(domain: str, username: str) -> User:
     data = boto3.client("ssm", region_name=region).get_parameter(
         Name=f"/s3pypi/{domain}/users/{username}",

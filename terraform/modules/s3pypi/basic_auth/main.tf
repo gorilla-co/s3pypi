@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -26,7 +26,7 @@ data "archive_file" "basic_auth" {
 resource "aws_lambda_function" "basic_auth" {
   function_name = "s3pypi-basic-auth-${replace(var.domain, ".", "-")}"
 
-  runtime = "python3.8"
+  runtime = "python3.14"
   timeout = 5
   publish = true
 
