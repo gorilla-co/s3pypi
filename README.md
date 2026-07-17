@@ -144,6 +144,62 @@ module "s3pypi" {
 }
 ```
 
+#### AWS WAF
+
+AWS WAF rules and rate limits tend to be very specific to each deployment, so
+this project does not try to standardize a particular configuration. Instead,
+the module accepts the ARN of an existing [AWS WAFv2 Web ACL] via the
+`waf_web_acl_arn` variable, and associates it with the CloudFront
+distribution. The Web ACL must have scope `CLOUDFRONT` and be created in the
+`us-east-1` region:
+
+```terraform
+resource "aws_wafv2_web_acl" "pypi" {
+  provider = aws.us_east_1
+  name     = "pypi"
+  scope    = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "AWSManagedRulesCommonRuleSet"
+    priority = 0
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWSManagedRulesCommonRuleSet"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "pypi"
+    sampled_requests_enabled   = true
+  }
+}
+```
+
+Then pass its ARN to the module: `waf_web_acl_arn = aws_wafv2_web_acl.pypi.arn`.
+If you need the distribution's ID or ARN for other purposes (e.g. Shield
+Advanced, CloudWatch alarms), they are exposed as the
+`cloudfront_distribution_id` and `cloudfront_distribution_arn` outputs.
+
+[AWS WAFv2 Web ACL]: https://docs.aws.amazon.com/waf/latest/developerguide/web-acl.html
+
 #### Migrating from s3pypi 0.x to 1.x
 
 Existing resources created using the CloudFormation templates from s3pypi 0.x

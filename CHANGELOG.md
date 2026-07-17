@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 
+## Unreleased
+
+### Added
+
+- `waf_web_acl_arn` Terraform variable to associate an AWS WAFv2 Web ACL with the
+  CloudFront distribution.
+- `cloudfront_distribution_id` and `cloudfront_distribution_arn` Terraform outputs.
+
+
 ## 2.0.1 - 2024-01-14
 
 ### Fixed

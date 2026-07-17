@@ -38,6 +38,12 @@ variable "enable_basic_auth" {
   description = "Enable basic authentication using Lambda@Edge"
 }
 
+variable "waf_web_acl_arn" {
+  type        = string
+  default     = null
+  description = "ARN of an AWS WAFv2 Web ACL (scope CLOUDFRONT, must exist in us-east-1) to associate with the CloudFront distribution"
+}
+
 locals {
   hosted_zone = replace(var.domain, "/^[^.]+\\./", "")
 }
@@ -64,6 +70,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   price_class     = "PriceClass_100"
   enabled         = true
   is_ipv6_enabled = true
+  web_acl_id      = var.waf_web_acl_arn
 
   origin {
     domain_name = aws_s3_bucket.pypi.bucket_regional_domain_name
@@ -178,4 +185,14 @@ module "basic_auth" {
   providers = {
     aws = aws.us_east_1
   }
+}
+
+output "cloudfront_distribution_id" {
+  value       = aws_cloudfront_distribution.cdn.id
+  description = "ID of the CloudFront distribution, e.g. for use with AWS WAF or CloudWatch"
+}
+
+output "cloudfront_distribution_arn" {
+  value       = aws_cloudfront_distribution.cdn.arn
+  description = "ARN of the CloudFront distribution, e.g. for use with AWS WAF or CloudWatch"
 }
