@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import html
 import re
 import urllib.parse
 from dataclasses import dataclass, field
@@ -31,10 +32,10 @@ class Index:
     filenames: Dict[str, Optional[Hash]] = field(default_factory=dict)
 
     @classmethod
-    def parse(cls, html: str) -> Index:
-        matches = re.findall(r'<a href=".+?((\w+)=(\w+))?">(.+)</a>', html)
+    def parse(cls, text: str) -> Index:
+        matches = re.findall(r'<a href=".+?((\w+)=(\w+))?">(.+)</a>', text)
         filenames = {
-            fname: Hash(hash_name, hash_value) if hash_name else None
+            html.unescape(fname): Hash(hash_name, hash_value) if hash_name else None
             for _, hash_name, hash_value, fname in matches
         }
         return cls(filenames)
@@ -43,7 +44,7 @@ class Index:
         links = "<br>\n".join(
             f'<a href="{urllib.parse.quote(fname)}'
             + (f"#{hash_.name}={hash_.value}" if hash_ else "")
-            + f'">{fname.rstrip("/")}</a>'
+            + f'">{html.escape(fname.rstrip("/"))}</a>'
             for fname, hash_ in sorted(self.filenames.items())
         )
         return index_html.format(body=indent(links, " " * 4))

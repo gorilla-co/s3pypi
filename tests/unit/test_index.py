@@ -49,3 +49,14 @@ def test_render_index(index_html):
     expected_html, filenames = index_html
     html = Index(filenames).to_html()
     assert html == expected_html
+
+
+def test_render_index_escapes_special_chars_in_filenames():
+    filenames = {
+        "a&b.tar.gz": None,
+        "x<y>-1.0-py3-none-any.whl": Hash("sha256", "1" * 64),
+    }
+    html = Index(filenames).to_html()
+    assert "a&amp;b.tar.gz" in html
+    assert "x&lt;y&gt;-1.0-py3-none-any.whl" in html
+    assert Index.parse(html).filenames == filenames
