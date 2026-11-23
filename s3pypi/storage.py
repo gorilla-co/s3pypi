@@ -57,8 +57,10 @@ class S3Storage:
     def get_index(self, directory: str) -> Index:
         try:
             html = self._object(directory, self.index_name).get()["Body"].read()
-        except botocore.exceptions.ClientError:
-            return Index()
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "NoSuchKey":
+                return Index()
+            raise
         return Index.parse(html.decode())
 
     @contextmanager
