@@ -29,12 +29,10 @@ class Locker(abc.ABC):
             self._unlock(lock_id)
 
     @abc.abstractmethod
-    def _lock(self, lock_id: str) -> None:
-        ...
+    def _lock(self, lock_id: str) -> None: ...
 
     @abc.abstractmethod
-    def _unlock(self, lock_id: str) -> None:
-        ...
+    def _unlock(self, lock_id: str) -> None: ...
 
 
 class DummyLocker(Locker):
