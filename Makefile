@@ -8,7 +8,7 @@ lint:
 	tox -e lint
 
 format:
-	poetry run isort --apply
+	poetry run isort .
 	poetry run black .
 
 profile:

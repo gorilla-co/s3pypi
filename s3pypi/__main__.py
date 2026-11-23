@@ -134,22 +134,24 @@ def main(*raw_args: str) -> None:
     log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
 
     cfg = core.Config(
-        s3=core.S3Config(
-            bucket=args.bucket,
-            prefix=args.prefix,
-            profile=args.profile,
-            region=args.region,
-            no_sign_request=args.no_sign_request,
-            endpoint_url=args.s3_endpoint_url,
-            put_kwargs=args.s3_put_args,
-            index_html=args.index_html,
-            locks_table=args.locks_table,
-        )
-        if hasattr(args, "bucket")
-        else core.S3Config(
-            bucket="",
-            profile=args.profile,
-            region=args.region,
+        s3=(
+            core.S3Config(
+                bucket=args.bucket,
+                prefix=args.prefix,
+                profile=args.profile,
+                region=args.region,
+                no_sign_request=args.no_sign_request,
+                endpoint_url=args.s3_endpoint_url,
+                put_kwargs=args.s3_put_args,
+                index_html=args.index_html,
+                locks_table=args.locks_table,
+            )
+            if hasattr(args, "bucket")
+            else core.S3Config(
+                bucket="",
+                profile=args.profile,
+                region=args.region,
+            )
         ),
     )
 
