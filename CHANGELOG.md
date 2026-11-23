@@ -14,6 +14,10 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
   CloudFront distribution.
 - `cloudfront_distribution_id` and `cloudfront_distribution_arn` Terraform outputs.
 
+### Fixed
+
+- Fail the upload when reading the existing package index fails.
+
 
 ## 2.0.1 - 2024-01-14
 
