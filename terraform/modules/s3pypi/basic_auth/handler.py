@@ -4,6 +4,7 @@ import json
 import logging
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import Self
 
 import boto3
 
@@ -12,7 +13,7 @@ log = logging.getLogger()
 region = "us-east-1"
 
 
-def handle(event: dict, context):
+def handle(event: dict, context) -> dict:
     request = event["Records"][0]["cf"]["request"]
     try:
         authenticate(request["headers"])
@@ -22,22 +23,35 @@ def handle(event: dict, context):
     return request
 
 
-def authenticate(headers: dict):
+def authenticate(headers: dict) -> None:
     domain = headers["host"][0]["value"]
-    auth = headers["authorization"][0]["value"]
-    auth_type, creds = auth.split(" ")
+    auth = BasicAuth.decode(headers["authorization"][0]["value"])
+    user = get_user(domain, auth.username)
 
-    if auth_type != "Basic":
-        raise ValueError("Invalid auth type: " + auth_type)
-
-    username, password = base64.b64decode(creds).decode().split(":")
-    user = get_user(domain, username)
-
-    if hash_password(password, user.password_salt) != user.password_hash:
-        raise ValueError("Invalid password for " + username)
+    if hash_password(auth.password, user.password_salt) != user.password_hash:
+        raise ValueError("Invalid password for " + auth.username)
 
 
-@dataclass
+@dataclass(frozen=True)
+class BasicAuth:
+    username: str
+    password: str
+
+    @classmethod
+    def decode(cls, header: str) -> Self:
+        auth_type, tail = header.split(" ")
+        if auth_type != "Basic":
+            raise ValueError("Invalid auth type: " + auth_type)
+
+        creds = base64.b64decode(tail).decode()
+        return cls(*creds.split(":", 1))
+
+    def encode(self) -> str:
+        creds = f"{self.username}:{self.password}"
+        return "Basic " + base64.b64encode(creds.encode()).decode()
+
+
+@dataclass(frozen=True)
 class User:
     username: str
     password_hash: str

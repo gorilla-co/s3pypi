@@ -1,7 +1,12 @@
-import base64
+import logging
 from unittest.mock import patch
 
 import handler
+
+
+def test_decode_password_with_colon():
+    auth = handler.BasicAuth("alice", "my:password")
+    assert handler.BasicAuth.decode(auth.encode()) == auth
 
 
 def test_handle_success():
@@ -10,16 +15,20 @@ def test_handle_success():
     assert resp["headers"]["authorization"]
 
 
-def test_handle_unauthorized():
+def test_handle_unauthorized(caplog):
     resp = call_handler("wrong", "secret")
     assert resp == handler.unauthorized
 
+    assert caplog.record_tuples == [
+        ("root", logging.ERROR, "ValueError('Invalid password for alice')"),
+    ]
+
 
 def call_handler(password: str, expected_password: str, salt: str = "NaCl"):
-    auth = "Basic " + base64.b64encode(f"alice:{password}".encode()).decode()
+    auth = handler.BasicAuth("alice", password)
     headers = {
         "host": [{"value": "pypi.example.com"}],
-        "authorization": [{"value": auth}],
+        "authorization": [{"value": auth.encode()}],
     }
     event = {"Records": [{"cf": {"request": {"headers": headers}}}]}
 

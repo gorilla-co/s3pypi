@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-import argparse
 import getpass
 import json
 import secrets
 import sys
+from argparse import ArgumentParser, ArgumentTypeError
 from dataclasses import asdict
 
 import boto3
@@ -11,10 +11,16 @@ import boto3
 from handler import User, hash_password, region
 
 
-def get_arg_parser():
-    p = argparse.ArgumentParser()
+def username(value: str) -> str:
+    if ":" in value:
+        raise ArgumentTypeError("must not contain ':'")
+    return value
+
+
+def get_arg_parser() -> ArgumentParser:
+    p = ArgumentParser()
     p.add_argument("domain", help="S3PyPI domain")
-    p.add_argument("username", help="Username")
+    p.add_argument("username", type=username, help="Username")
     pw = p.add_mutually_exclusive_group()
     pw.add_argument(
         "--password-stdin", action="store_true", help="Read password from stdin"
@@ -37,7 +43,7 @@ def get_arg_parser():
     return p
 
 
-def main():
+def main() -> None:
     args = get_arg_parser().parse_args()
 
     if args.password_stdin:
@@ -60,7 +66,7 @@ def main():
         print(password)
 
 
-def put_user(domain: str, user: User, overwrite: bool = False):
+def put_user(domain: str, user: User, overwrite: bool = False) -> None:
     data = asdict(user)
     username = data.pop("username")
     boto3.client("ssm", region_name=region).put_parameter(
