@@ -10,6 +10,12 @@ def test_handle_success():
     assert resp["headers"]["authorization"]
 
 
+def test_handle_password_with_colon():
+    resp = call_handler("sec:ret:", "sec:ret:")
+    assert resp != handler.unauthorized
+    assert call_handler("sec:other", "sec:ret:") == handler.unauthorized
+
+
 def test_handle_unauthorized():
     resp = call_handler("wrong", "secret")
     assert resp == handler.unauthorized

@@ -30,7 +30,7 @@ def authenticate(headers: dict):
     if auth_type != "Basic":
         raise ValueError("Invalid auth type: " + auth_type)
 
-    username, password = base64.b64decode(creds).decode().split(":")
+    username, password = base64.b64decode(creds).decode().split(":", 1)
     user = get_user(domain, username)
 
     if hash_password(password, user.password_salt) != user.password_hash:
