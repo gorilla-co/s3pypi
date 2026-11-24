@@ -2,9 +2,6 @@
 
 ## Getting started
 
-So you're interested in contributing to s3pypi? That's great! We're excited to
-hear your ideas and experiences.
-
 This file describes all the different ways in which you can contribute.
 
 
@@ -30,6 +27,9 @@ possible, always try to include the following:
 The maintainer of this repository monitors issues on a regular basis and will
 respond to your bug report as soon as possible.
 
+A clear bug report with steps to reproduce is the most helpful contribution you
+can make. You don't need to send a fix along with it.
+
 
 ## Requesting an enhancement
 
@@ -52,31 +52,35 @@ respond to your request as soon as possible.
 
 ## Contributing code
 
-Would you prefer to contribute directly by writing some code yourself? That's
-great.
+s3pypi is maintained in limited spare time, and reviewing a pull request often
+takes more effort than making the change. Code contributions are most welcome
+from people who use s3pypi and want to improve it for their own use case.
 
-**If your contribution is minor**, such as fixing a bug or typo, we encourage
-you to open a pull request right away.
+**Open an issue before writing any code**, including for small bug fixes.
+Describe the problem, how you use s3pypi, and how you ran into it. The
+maintainer may choose to fix it directly. Only open a pull request once the
+maintainer has agreed to one.
 
-**If your contribution is major**, such as a new feature or a breaking change,
-start by opening an issue first. That way, other people can weigh in on the
-discussion before you do any work.
+Pull requests without such an issue may be closed without review, as may changes
+produced by automated tools. If you don't use s3pypi yourself, please don't open
+pull requests for it. If you found a problem by reading the code, report it in
+an issue instead.
 
 The workflow for creating a pull request:
 
-1. Fork the repository.
-2. `clone` your forked repository.
-3. Create a new feature branch from the `master` branch.
-4. Make your contributions to the project's code. Please run the tests before
-   committing, and keep the code style conform to the project's style guide
-   (listed below).
-5. Add documentation where required. Please keep the style conform.
-6. Add your changes to the [changelog](CHANGELOG.md) in the "Unreleased"
-   section. Include a link to your GitHub profile for some internet fame.
-7. `commit` your changes in logical chunks.
-8. `push` your branch to your fork on GitHub.
-9. Create a pull request from your feature branch to the original repository's
-   `master` branch.
+1. Open an issue and wait for the maintainer to agree to a pull request.
+2. Fork the repository.
+3. `clone` your forked repository.
+4. Create a new feature branch from the `master` branch.
+5. Make your contributions to the project's code. Please follow the project's
+   style guide (listed below), and run the tests before committing.
+6. Add documentation where required.
+7. Add your changes to the [changelog](CHANGELOG.md) in the "Unreleased"
+   section. The maintainer decides when to create a new release.
+8. `commit` your changes in logical chunks.
+9. `push` your branch to your fork on GitHub.
+10. Create a pull request from your feature branch to the original repository's
+    `master` branch, and link the issue in its description, e.g. "Fixes #123".
 
 The maintainer of this repository monitors pull requests on a regular basis and
 will respond as soon as possible. The smaller individual pull requests are, the
@@ -99,7 +103,7 @@ poetry run s3pypi
 ```
 
 This project uses the [Black](https://github.com/psf/black) code style. When
-contributing code, please format your changes properly.
+contributing code, please format your changes accordingly.
 
 Check for lint & formatting errors:
 
